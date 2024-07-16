@@ -32,28 +32,18 @@ public class TorrentsApi
     public async Task<Int64> GetTotal(bool skipCache = false,
                                       CancellationToken cancellationToken = default)
     {
-        var parameters = new NameValueCollection();
+        var res = await GetAsync(skipCache);
 
-        if (skipCache)
-        {
-            parameters.Add("skipCache", skipCache.ToString());
-        }
-
-        var result = await _requests.GetRequestAsync($"torrents/mylist{parameters.ToQueryString()}", true, cancellationToken);
-
-
-        if (result == null)
+        if (res == null)
         {
             return 0;
         }
 
-        var torrents = JsonConvert.DeserializeObject<Response<dynamic>>(result);
-
-        return torrents?.Data?.Count ?? 0;
+        return res.Count;
     }
 
     /// <summary>
-    ///     Get user torrents list by offset.
+    ///     Get user torrents list.
     /// </summary>
     /// <param name="skipCache">
     ///     Whether to get refresh cached data on server. Defaults to false.
@@ -63,7 +53,7 @@ public class TorrentsApi
     ///     cancellation.
     /// </param>
     /// <returns>List of torrents.</returns>
-    public async Task<List<Torrent>> GetAsync(bool skipCache = false,
+    public async Task<List<Torrent>?> GetAsync(bool skipCache = false,
                                       CancellationToken cancellationToken = default)
     {
         var list = await _requests.GetRequestAsync("torrents/mylist", true, cancellationToken);
@@ -72,11 +62,11 @@ public class TorrentsApi
 
         if (list == null)
         {
-            return new List<Torrent>();
+            return null;
         }
 
         var torrentsResponse = JsonConvert.DeserializeObject<Response<Torrent>>(list);
-        return torrentsResponse?.Data ?? new List<Torrent>();
+        return torrentsResponse?.Data;
     }
 
     /// <summary>
@@ -95,25 +85,11 @@ public class TorrentsApi
                                              bool skipCache = false,
                                              CancellationToken cancellationToken = default)
     {
-        var parameters = new NameValueCollection();
+        var res = await GetAsync(skipCache);
 
-        if (skipCache)
+        if (res != null)
         {
-            parameters.Add("skipCache", skipCache.ToString());
-        }
-
-        var result = await _requests.GetRequestAsync($"torrents/mylist{parameters.ToQueryString()}", true, cancellationToken);
-
-        if (result == null)
-        {
-            return null;
-        }
-
-        var res = JsonConvert.DeserializeObject<Response<Torrent>>(result);
-
-        if (res?.Data != null)
-        {
-            foreach (var torrent in res.Data)
+            foreach (var torrent in res)
             {
                 if (torrent.Id == id)
                 {
@@ -123,39 +99,6 @@ public class TorrentsApi
         }
 
         return null;
-    }
-
-    /// <summary>
-    ///     Get the files available on Real-Debrid for the given torrent.
-    /// </summary>
-    /// <param name="id">The ID of the torrent</param>
-    /// <param name="cancellationToken">
-    ///     A cancellation token that can be used by other objects or threads to receive notice of
-    ///     cancellation.
-    /// </param>
-    /// <returns>List of files available.</returns>
-    public async Task<AvailableFiles> GetAvailableFiles(String id, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            return await _requests.GetRequestAsync<AvailableFiles>($"torrents/instantAvailability/{id}", true, cancellationToken);
-        }
-        catch (JsonSerializationException)
-        {
-            var result = await _requests.GetRequestAsync<AvailableFiles2>($"torrents/instantAvailability/{id}", true, cancellationToken);
-
-            return result.ToDictionary(r => r.Key,
-                                       r => new Dictionary<String, List<Dictionary<String, TorrentInstantAvailabilityFile>>>
-                                       {
-                                           {
-                                               "rd", r.Value
-                                           }
-                                       });
-        }
-        catch
-        {
-            return new AvailableFiles();
-        }
     }
 
     /// <summary>
@@ -169,15 +112,6 @@ public class TorrentsApi
     public async Task<TorrentActiveCount> GetActiveCountAsync(CancellationToken cancellationToken = default)
     {
         return await _requests.GetRequestAsync<TorrentActiveCount>("torrents/activeCount", true, cancellationToken);
-    }
-
-    /// <summary>
-    ///     Get available hosts to upload the torrent to.
-    /// </summary>
-    /// <returns>List of available hosters.</returns>
-    public async Task<IList<TorrentHost>> GetAvailableHostsAsync(CancellationToken cancellationToken = default)
-    {
-        return await _requests.GetRequestAsync<List<TorrentHost>>("torrents/availableHosts", true, cancellationToken);
     }
 
     /// <summary>
@@ -214,28 +148,6 @@ public class TorrentsApi
     }
 
     /// <summary>
-    ///     Select files of a torrent to start the torrent.
-    /// </summary>
-    /// <param name="id">The ID of the torrent</param>
-    /// <param name="fileIds">Selected files IDs or "all"</param>
-    /// <param name="cancellationToken">
-    ///     A cancellation token that can be used by other objects or threads to receive notice of
-    ///     cancellation.
-    /// </param>
-    /// <returns></returns>
-    public async Task SelectFilesAsync(String id, String[] fileIds, CancellationToken cancellationToken = default)
-    {
-        var files = String.Join(",", fileIds);
-
-        var data = new[]
-        {
-            new KeyValuePair<String, String?>("files", files)
-        };
-
-        await _requests.PostRequestAsync($"torrents/selectFiles/{id}", data, true, cancellationToken);
-    }
-
-    /// <summary>
     ///     Delete a torrent from torrents list.
     /// </summary>
     /// <param name="id">The ID of the torrent</param>
@@ -246,6 +158,7 @@ public class TorrentsApi
     /// <returns></returns>
     public async Task DeleteAsync(String id, CancellationToken cancellationToken = default)
     {
+
         await _requests.DeleteRequestAsync($"torrents/delete/{id}", true, cancellationToken);
     }
 }
