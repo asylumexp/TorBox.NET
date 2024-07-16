@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Xunit;
 
-namespace RDNET.Test;
+namespace TorBoxNET.Test;
 
 public class TrafficTest
 {

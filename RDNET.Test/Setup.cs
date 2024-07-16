@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace RDNET.Test;
+namespace TorBoxNET.Test;
 
 public static class Setup
 {
