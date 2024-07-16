@@ -1,132 +1,144 @@
 ﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 
-namespace TorBoxNET;
-
-public class Torrent
+namespace TorBoxNET
 {
-    /// <summary>
-    ///     ID of the torrent.
-    /// </summary>
-    [JsonProperty("id")]
-    public String Id { get; set; } = null!;
+    public class Torrent
+    {
+        [JsonProperty("id")]
+        public int Id { get; set; }
 
-    /// <summary>
-    ///     Filename of the torrent.
-    /// </summary>
-    [JsonProperty("filename")]
-    public String Filename { get; set; } = null!;
+        [JsonProperty("auth_id")]
+        public string AuthId { get; set; } = null!;
 
-    /// <summary>
-    ///     Original filename of the torrent.
-    /// </summary>
-    [JsonProperty("original_filename")]
-    public String? OriginalFilename { get; set; }
+        [JsonProperty("server")]
+        public int Server { get; set; }
 
-    /// <summary>
-    ///     SHA1 Hash of the torrent.
-    /// </summary>
-    [JsonProperty("hash")]
-    public String Hash { get; set; } = null!;
+        [JsonProperty("hash")]
+        public string Hash { get; set; } = null!;
 
-    /// <summary>
-    ///     Size of selected files only.
-    /// </summary>
-    [JsonProperty("bytes")]
-    public Int64 Bytes { get; set; }
+        [JsonProperty("name")]
+        public string Name { get; set; } = null!;
 
-    /// <summary>
-    ///     Size of all the files.
-    /// </summary>
-    [JsonProperty("original_bytes")]
-    public Int64 OriginalBytes { get; set; }
+        [JsonProperty("magnet")]
+        public string Magnet { get; set; } = null!;
 
-    /// <summary>
-    ///     Host main domain.
-    /// </summary>
-    [JsonProperty("host")]
-    public String? Host { get; set; }
+        [JsonProperty("size")]
+        public long Size { get; set; }
 
-    /// <summary>
-    ///     Split size of links.
-    /// </summary>
-    [JsonProperty("split")]
-    public Int64 Split { get; set; }
+        [JsonProperty("active")]
+        public bool Active { get; set; }
 
-    /// <summary>
-    ///     Possible values: 0 to 100.
-    /// </summary>
-    [JsonProperty("progress")]
-    public Int64 Progress { get; set; }
+        [JsonProperty("created_at")]
+        public DateTime CreatedAt { get; set; }
 
-    /// <summary>
-    ///     Current status of the torrent: magnet_error, magnet_conversion, waiting_files_selection, queued, downloading,
-    ///     downloaded, error, virus, compressing, uploading, dead.
-    /// </summary>
-    [JsonProperty("status")]
-    public String? Status { get; set; }
+        [JsonProperty("updated_at")]
+        public DateTime UpdatedAt { get; set; }
 
-    /// <summary>
-    ///     Date when torrent was added.
-    /// </summary>
-    [JsonProperty("added")]
-    public DateTimeOffset Added { get; set; }
+        [JsonProperty("download_state")]
+        public string DownloadState { get; set; } = null!;
 
-    /// <summary>
-    ///     List of files in the torrent.
-    /// </summary>
-    [JsonProperty("files")]
-    public List<TorrentFile>? Files { get; set; }
+        [JsonProperty("seeds")]
+        public int Seeds { get; set; }
 
-    /// <summary>
-    ///     List of links.
-    /// </summary>
-    [JsonProperty("links")]
-    public List<String>? Links { get; set; }
+        [JsonProperty("peers")]
+        public int Peers { get; set; }
 
-    /// <summary>
-    ///     Only set when finished.
-    /// </summary>
-    [JsonProperty("ended")]
-    public DateTimeOffset? Ended { get; set; }
+        [JsonProperty("ratio")]
+        public double Ratio { get; set; }
 
-    /// <summary>
-    ///     Speed of the torrent.
-    ///     Only present in "downloading", "compressing", "uploading" status.
-    /// </summary>
-    [JsonProperty("speed")]
-    public Int64? Speed { get; set; }
+        [JsonProperty("progress")]
+        public double Progress { get; set; }
 
-    /// <summary>
-    ///     Amount of seeders
-    ///     Only present in "downloading", "magnet_conversion" status.
-    /// </summary>
-    [JsonProperty("seeders")]
-    public Int64? Seeders { get; set; }
-}
+        [JsonProperty("download_speed")]
+        public int DownloadSpeed { get; set; }
 
-public class TorrentFile
-{
-    /// <summary>
-    ///     ID of the file in the torrent.
-    /// </summary>
-    [JsonProperty("id")]
-    public Int64 Id { get; set; }
+        [JsonProperty("upload_speed")]
+        public int UploadSpeed { get; set; }
 
-    /// <summary>
-    ///     Path to the file inside the torrent, starting with "/".
-    /// </summary>
-    [JsonProperty("path")]
-    public String Path { get; set; } = null!;
+        [JsonProperty("eta")]
+        public int Eta { get; set; }
 
-    /// <summary>
-    ///     Size of the file.
-    /// </summary>
-    [JsonProperty("bytes")]
-    public Int64 Bytes { get; set; }
+        [JsonProperty("torrent_file")]
+        public bool TorrentFile { get; set; }
 
-    /// <summary>
-    ///     True if file is selected to be downloaded.
-    /// </summary>
-    [JsonProperty("selected")]
-    public Boolean Selected { get; set; }
+        [JsonProperty("expires_at")]
+        public DateTime? ExpiresAt { get; set; }
+
+        [JsonProperty("download_present")]
+        public bool DownloadPresent { get; set; }
+
+        [JsonProperty("files")]
+        public List<TorrentFile> Files { get; set; } = null!;
+
+        [JsonProperty("download_path")]
+        public string DownloadPath { get; set; } = null!;
+
+        [JsonProperty("inactive_check")]
+        public int InactiveCheck { get; set; }
+
+        [JsonProperty("availability")]
+        public int Availability { get; set; }
+
+        [JsonProperty("download_finished")]
+        public bool DownloadFinished { get; set; }
+
+        [JsonProperty("tracker")]
+        public string? Tracker { get; set; }
+
+        [JsonProperty("total_uploaded")]
+        public long TotalUploaded { get; set; }
+
+        [JsonProperty("total_downloaded")]
+        public long TotalDownloaded { get; set; }
+
+        [JsonProperty("cached")]
+        public bool Cached { get; set; }
+
+        [JsonProperty("owner")]
+        public string Owner { get; set; } = null!;
+
+        [JsonProperty("seed_torrent")]
+        public bool SeedTorrent { get; set; }
+
+        [JsonProperty("allow_zipped")]
+        public bool AllowZipped { get; set; }
+
+        [JsonProperty("long_term_seeding")]
+        public bool LongTermSeeding { get; set; }
+
+        [JsonProperty("tracker_message")]
+        public string? TrackerMessage { get; set; }
+    }
+
+    public class TorrentFile
+    {
+        [JsonProperty("id")]
+        public int Id { get; set; }
+
+        [JsonProperty("md5")]
+        public string Md5 { get; set; } = null!;
+
+        [JsonProperty("hash")]
+        public string Hash { get; set; } = null!;
+
+        [JsonProperty("name")]
+        public string Name { get; set; } = null!;
+
+        [JsonProperty("size")]
+        public long Size { get; set; }
+
+        [JsonProperty("s3_path")]
+        public string S3Path { get; set; } = null!;
+
+        [JsonProperty("mimetype")]
+        public string MimeType { get; set; } = null!;
+
+        [JsonProperty("short_name")]
+        public string ShortName { get; set; } = null!;
+
+        [JsonProperty("absolute_path")]
+        public string AbsolutePath { get; set; } = null!;
+    }
 }

@@ -47,7 +47,7 @@ public class TorrentsApi
             return 0;
         }
 
-        var torrents = JsonConvert.DeserializeObject<Response>(result);
+        var torrents = JsonConvert.DeserializeObject<Response<dynamic>>(result);
 
         return torrents?.Data?.Count ?? 0;
     }
@@ -55,91 +55,74 @@ public class TorrentsApi
     /// <summary>
     ///     Get user torrents list by offset.
     /// </summary>
-    /// <param name="offset">Starting offset</param>
-    /// <param name="limit">Entries returned per page / request (max 100, default: 50)</param>
-    /// <param name="filter">"active", list active torrents first</param>
+    /// <param name="skipCache">
+    ///     Whether to get refresh cached data on server. Defaults to false.
+    /// </param>
     /// <param name="cancellationToken">
     ///     A cancellation token that can be used by other objects or threads to receive notice of
     ///     cancellation.
     /// </param>
     /// <returns>List of torrents.</returns>
-    public async Task<IList<Torrent>> GetAsync(Int32? offset = null,
-                                               Int32? limit = null,
-                                               String? filter = null,
-                                               CancellationToken cancellationToken = default)
+    public async Task<List<Torrent>> GetAsync(bool skipCache = false,
+                                      CancellationToken cancellationToken = default)
     {
-        var parameters = new NameValueCollection();
+        var list = await _requests.GetRequestAsync("torrents/mylist", true, cancellationToken);
 
-        if (offset > 0)
+        Console.WriteLine(list);
+
+        if (list == null)
         {
-            parameters.Add("offset", offset.ToString());
+            return new List<Torrent>();
         }
 
-        if (limit > 0)
-        {
-            parameters.Add("limit", limit.ToString());
-        }
-
-        if (!String.IsNullOrWhiteSpace(filter))
-        {
-            parameters.Add("filter", filter);
-        }
-
-        var list = await _requests.GetRequestAsync<List<Torrent>>($"torrents{parameters.ToQueryString()}", true, cancellationToken);
-
-        return list;
-    }
-        
-    /// <summary>
-    ///     Get user torrents list by page.
-    /// </summary>
-    /// <param name="page">Pagination system</param>
-    /// <param name="limit">Entries returned per page / request (max 100, default: 50)</param>
-    /// <param name="filter">"active", list active torrents first</param>
-    /// <param name="cancellationToken">
-    ///     A cancellation token that can be used by other objects or threads to receive notice of
-    ///     cancellation.
-    /// </param>
-    /// <returns>List of torrents.</returns>
-    public async Task<IList<Torrent>> GetByPageAsync(Int32? page = null,
-                                                     Int32? limit = null,
-                                                     String? filter = null,
-                                                     CancellationToken cancellationToken = default)
-    {
-        var parameters = new NameValueCollection();
-
-        if (limit > 0)
-        {
-            parameters.Add("limit", limit.ToString());
-        }
-
-        if (page > 0)
-        {
-            parameters.Add("page", page.ToString());
-        }
-
-        if (!String.IsNullOrWhiteSpace(filter))
-        {
-            parameters.Add("filter", filter);
-        }
-
-        var list = await _requests.GetRequestAsync<List<Torrent>>($"torrents{parameters.ToQueryString()}", true, cancellationToken);
-
-        return list;
+        var torrentsResponse = JsonConvert.DeserializeObject<Response<Torrent>>(list);
+        return torrentsResponse?.Data ?? new List<Torrent>();
     }
 
     /// <summary>
     ///     Get information about the torrent.
     /// </summary>
     /// <param name="id">The ID of the torrent</param>
+    /// <param name="skipCache">
+    ///     Whether to get refresh cached data on server. Defaults to false.
+    /// </param>
     /// <param name="cancellationToken">
     ///     A cancellation token that can be used by other objects or threads to receive notice of
     ///     cancellation.
     /// </param>
     /// <returns>Info about the torrent.</returns>
-    public async Task<Torrent> GetInfoAsync(String id, CancellationToken cancellationToken = default)
+    public async Task<Torrent?> GetInfoAsync(int id,
+                                             bool skipCache = false,
+                                             CancellationToken cancellationToken = default)
     {
-        return await _requests.GetRequestAsync<Torrent>($"torrents/info/{id}", true, cancellationToken);
+        var parameters = new NameValueCollection();
+
+        if (skipCache)
+        {
+            parameters.Add("skipCache", skipCache.ToString());
+        }
+
+        var result = await _requests.GetRequestAsync($"torrents/mylist{parameters.ToQueryString()}", true, cancellationToken);
+
+        if (result == null)
+        {
+            return null;
+        }
+
+        var res = JsonConvert.DeserializeObject<Response<Torrent>>(result);
+
+        if (res?.Data != null)
+        {
+            foreach (var torrent in res.Data)
+            {
+                if (torrent.Id == id)
+                {
+                    return torrent;
+                }
+            }
+        }
+
+        return null;
     }
 
     /// <summary>

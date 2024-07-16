@@ -3,5 +3,9 @@ using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 var rdt = new TorBoxNetClient();
 
+Console.Clear();
 
-Console.WriteLine(await rdt.Torrents.GetTotal(true));
+
+var a = await rdt.Torrents.GetInfoAsync(77617, true);
+
+Console.WriteLine(a);

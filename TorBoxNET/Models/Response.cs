@@ -2,7 +2,7 @@
 
 namespace TorBoxNET;
 
-internal class Response
+internal class Response<T>
 {
     [JsonProperty("success")]
     public Boolean? Success { get; set; }
@@ -14,5 +14,5 @@ internal class Response
     public String? Detail { get; set; }
 
     [JsonProperty("data")]
-    public List<dynamic>? Data { get; set; }
+    public List<T>? Data { get; set; }
 }
