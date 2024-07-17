@@ -4,6 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
+using System.Text;
 using Newtonsoft.Json;
 using AvailableFiles = System.Collections.Generic.Dictionary<System.String, System.Collections.Generic.Dictionary<System.String,
     System.Collections.Generic.List<System.Collections.Generic.Dictionary<System.String, TorBoxNET.TorrentInstantAvailabilityFile>>>>;
@@ -111,7 +112,7 @@ public class TorrentsApi
     ///     cancellation.
     /// </param>
     /// <returns>Info about the added torrent.</returns>
-    public async Task<TorrentAddResult> AddFileAsync(Byte[] file, int seeding = 1, bool allowZip = false, string? name = null, CancellationToken cancellationToken = default)
+    public async Task<ResponseArray<TorrentAddResult>> AddFileAsync(Byte[] file, int seeding = 1, bool allowZip = false, string? name = null, CancellationToken cancellationToken = default)
     {
         using (var content = new MultipartFormDataContent())
         {
@@ -126,13 +127,9 @@ public class TorrentsApi
             content.Add(fileContent);
             content.Add(new StringContent(seeding.ToString()), "seed");
             content.Add(new StringContent(allowZip.ToString()), "allow_zip");
+            content.Add(new StringContent(name), "name");
 
-            if (!string.IsNullOrEmpty(name))
-            {
-                content.Add(new StringContent(name), "name");
-            }
-
-            return await _requests.PostRequestMultipartAsync<TorrentAddResult>("torrents/createtorrent", content, true, cancellationToken);
+            return await _requests.PostRequestMultipartAsync<ResponseArray<TorrentAddResult>>("torrents/createtorrent", content, true, cancellationToken);
         }
     }
 
@@ -147,35 +144,37 @@ public class TorrentsApi
     ///     cancellation.
     /// </param>
     /// <returns>Info about the added torrent.</returns>
-    public async Task<TorrentAddResult> AddMagnetAsync(string magnet, int seeding = 1, bool allowZip = false, string? name = null, CancellationToken cancellationToken = default)
+    public async Task<ResponseArray<TorrentAddResult>> AddMagnetAsync(string magnet, int seeding = 1, bool allowZip = false, string? name = null, CancellationToken cancellationToken = default)
     {
         var data = new List<KeyValuePair<string, string?>>
     {
         new KeyValuePair<string, string?>("magnet", magnet),
         new KeyValuePair<string, string?>("seed", seeding.ToString()),
-        new KeyValuePair<string, string?>("allow_zip", allowZip.ToString())
+        new KeyValuePair<string, string?>("allow_zip", allowZip.ToString()),
+        new KeyValuePair<string, string?>("name", name)
     };
 
-        if (name != null)
-        {
-            data.Add(new KeyValuePair<string, string?>("name", name));
-        }
-
-        return await _requests.PostRequestAsync<TorrentAddResult>("torrents/createtorrent", data, true, cancellationToken);
+        return await _requests.PostRequestAsync<ResponseArray<TorrentAddResult>>("torrents/createtorrent", data, true, cancellationToken);
     }
 
     /// <summary>
-    ///     Delete a torrent from torrents list.
+    ///     Modify a torrent from torrents list.
     /// </summary>
     /// <param name="id">The ID of the torrent</param>
+    /// <param name="action">The action to be performed on the torrent, valid options are pause, resume, reannounce, delete.</param>
     /// <param name="cancellationToken">
     ///     A cancellation token that can be used by other objects or threads to receive notice of
     ///     cancellation.
     /// </param>
     /// <returns></returns>
-    public async Task DeleteAsync(String id, CancellationToken cancellationToken = default)
+    public async Task<Response> ControlAsync(int id, string? action, CancellationToken cancellationToken = default)
     {
-
-        await _requests.DeleteRequestAsync($"torrents/delete/{id}", true, cancellationToken);
+        var data = new
+        {
+            torrent_id = id,
+            operation = action
+        };
+        var jsonContent = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
+        return await _requests.PostRequestRawAsync<Response>("torrents/controltorrent", jsonContent, true, cancellationToken);
     }
 }

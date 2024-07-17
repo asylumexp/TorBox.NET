@@ -173,6 +173,15 @@ internal class Requests
         await Request(Store.ApiUrl, url, null, requireAuthentication, RequestType.Post, content, cancellationToken);
     }
 
+    public async Task PostRequestRawAsync(String url, HttpContent? data, Boolean requireAuthentication, CancellationToken cancellationToken)
+    {
+        await Request(Store.ApiUrl, url, null, requireAuthentication, RequestType.Post, data, cancellationToken);
+    }
+    public async Task<T> PostRequestRawAsync<T>(String url, HttpContent? data, Boolean requireAuthentication, CancellationToken cancellationToken)
+    where T : class, new()
+    {
+        return await Request<T>(Store.ApiUrl, url, requireAuthentication, RequestType.Post, data, cancellationToken);
+    }
     public async Task<T> PostRequestAsync<T>(String url, IEnumerable<KeyValuePair<String, String?>>? data, Boolean requireAuthentication, CancellationToken cancellationToken)
         where T : class, new()
     {
