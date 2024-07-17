@@ -167,7 +167,7 @@ public class TorrentsApi
     ///     cancellation.
     /// </param>
     /// <returns></returns>
-    public async Task<Response> ControlAsync(int id, string? action, CancellationToken cancellationToken = default)
+    public async Task<Response> ControlAsync(int id, string action, CancellationToken cancellationToken = default)
     {
         var data = new
         {
@@ -176,5 +176,26 @@ public class TorrentsApi
         };
         var jsonContent = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
         return await _requests.PostRequestRawAsync<Response>("torrents/controltorrent", jsonContent, true, cancellationToken);
+    }
+
+    /// <summary>
+    ///     Modify a torrent from queued torrents list.
+    /// </summary>
+    /// <param name="id">The ID of the torrent</param>
+    /// <param name="action">The action to be performed on the torrent, valid options are delete.</param>
+    /// <param name="cancellationToken">
+    ///     A cancellation token that can be used by other objects or threads to receive notice of
+    ///     cancellation.
+    /// </param>
+    /// <returns></returns>
+    public async Task<Response> ControlQueuedAsync(int id, string action = "delete", CancellationToken cancellationToken = default)
+    {
+        var data = new
+        {
+            queued_id = id,
+            operation = action
+        };
+        var jsonContent = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
+        return await _requests.PostRequestRawAsync<Response>("torrents/controlqueued", jsonContent, true, cancellationToken);
     }
 }
