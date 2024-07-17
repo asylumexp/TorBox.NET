@@ -180,6 +180,12 @@ internal class Requests
         return await Request<T>(Store.ApiUrl, url, requireAuthentication, RequestType.Post, content, cancellationToken);
     }
 
+    public async Task<T> PostRequestMultipartAsync<T>(String url, MultipartFormDataContent? data, Boolean requireAuthentication, CancellationToken cancellationToken)
+    where T : class, new()
+    {
+        return await Request<T>(Store.ApiUrl, url, requireAuthentication, RequestType.Post, data, cancellationToken);
+    }
+
     public async Task PutRequestAsync(String url, Byte[] file, Boolean requireAuthentication, CancellationToken cancellationToken)
     {
         var content = new ByteArrayContent(file);
