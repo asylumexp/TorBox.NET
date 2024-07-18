@@ -1,11 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Authors>Roger Far</Authors>
+    <Authors>Sam</Authors>
     <Product>TorBox.NET</Product>
-    <Description>A TorBox API proxy for .NET Standard.</Description>
+    <Description>A TorBox API proxy for .NET Standard based upon RDNET.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageId>TorBox.NET</PackageId>
     <PackageProjectUrl>https://github.com/asylumexp/TorBox.NET</PackageProjectUrl>

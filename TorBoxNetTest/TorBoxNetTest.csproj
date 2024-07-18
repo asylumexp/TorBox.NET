@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TorBoxNET\RDNET.csproj" />
+    <ProjectReference Include="..\TorBoxNET\TorBoxNET.csproj" />
   </ItemGroup>
 
 </Project>
