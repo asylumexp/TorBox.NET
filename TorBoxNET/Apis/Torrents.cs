@@ -214,7 +214,7 @@ public class TorrentsApi
     ///     cancellation.
     /// </param>
     /// <returns></returns>
-    public async Task<Response<String>> TorrentDownloadAsync(int torrent_id, int? file_id, bool zip = false, CancellationToken cancellationToken = default)
+    public async Task<Response<String>> RequestDownloadAsync(int torrent_id, int? file_id, bool zip = false, CancellationToken cancellationToken = default)
     {
         var parameters = HttpUtility.ParseQueryString(string.Empty);
         parameters["token"] = _store.BearerToken;
