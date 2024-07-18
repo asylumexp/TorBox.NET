@@ -216,24 +216,12 @@ public class TorrentsApi
     /// <returns></returns>
     public async Task<Response<String>> TorrentDownloadAsync(int torrent_id, int? file_id, bool zip = false, CancellationToken cancellationToken = default)
     {
-        var data = new List<KeyValuePair<string, string?>>
-    {
-        new KeyValuePair<string, string?>("token", _store.BearerToken), // idk if oauth token would even work
-        new KeyValuePair<string, string?>("torrent_id", torrent_id.ToString()),
-        new KeyValuePair<string, string?>("file_id", file_id.ToString()),
-        new KeyValuePair<string, string?>("zip", zip.ToString())
-    };
+        var parameters = HttpUtility.ParseQueryString(string.Empty);
+        parameters["token"] = _store.BearerToken;
+        parameters["torrent_id"] = torrent_id.ToString();
+        parameters["file_id"] = file_id.ToString();
+        parameters["zip"] = zip.ToString();
 
-        // Convert to URL parameters
-        var queryString = HttpUtility.ParseQueryString(string.Empty);
-        foreach (var param in data)
-        {
-            queryString[param.Key] = param.Value;
-        }
-        string urlParameters = queryString.ToString();
-
-        var jsonContent = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
-
-        return await _requests.GetRequestAsync<Response<String>>($"torrents/requestdl?{urlParameters}", true, cancellationToken);
+        return await _requests.GetRequestAsync<Response<String>>($"torrents/requestdl?{parameters}", true, cancellationToken);
     }
 }
