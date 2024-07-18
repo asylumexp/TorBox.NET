@@ -68,7 +68,7 @@ public class TorrentsApi
             return null;
         }
 
-        return JsonConvert.DeserializeObject<ResponseList<Torrent>>(list)?.Data;
+        return JsonConvert.DeserializeObject<Response<List<Torrent>>>(list)?.Data;
     }
 
     /// <summary>
@@ -112,7 +112,7 @@ public class TorrentsApi
     ///     cancellation.
     /// </param>
     /// <returns>Info about the added torrent.</returns>
-    public async Task<ResponseArray<TorrentAddResult>> AddFileAsync(Byte[] file, int seeding = 1, bool allowZip = false, string? name = null, CancellationToken cancellationToken = default)
+    public async Task<Response<TorrentAddResult>> AddFileAsync(Byte[] file, int seeding = 1, bool allowZip = false, string? name = null, CancellationToken cancellationToken = default)
     {
         using (var content = new MultipartFormDataContent())
         {
@@ -129,7 +129,7 @@ public class TorrentsApi
             content.Add(new StringContent(allowZip.ToString()), "allow_zip");
             content.Add(new StringContent(name), "name");
 
-            return await _requests.PostRequestMultipartAsync<ResponseArray<TorrentAddResult>>("torrents/createtorrent", content, true, cancellationToken);
+            return await _requests.PostRequestMultipartAsync<Response<TorrentAddResult>>("torrents/createtorrent", content, true, cancellationToken);
         }
     }
 
@@ -144,7 +144,7 @@ public class TorrentsApi
     ///     cancellation.
     /// </param>
     /// <returns>Info about the added torrent.</returns>
-    public async Task<ResponseArray<TorrentAddResult>> AddMagnetAsync(string magnet, int seeding = 1, bool allowZip = false, string? name = null, CancellationToken cancellationToken = default)
+    public async Task<Response<TorrentAddResult>> AddMagnetAsync(string magnet, int seeding = 1, bool allowZip = false, string? name = null, CancellationToken cancellationToken = default)
     {
         var data = new List<KeyValuePair<string, string?>>
     {
@@ -154,7 +154,7 @@ public class TorrentsApi
         new KeyValuePair<string, string?>("name", name)
     };
 
-        return await _requests.PostRequestAsync<ResponseArray<TorrentAddResult>>("torrents/createtorrent", data, true, cancellationToken);
+        return await _requests.PostRequestAsync<Response<TorrentAddResult>>("torrents/createtorrent", data, true, cancellationToken);
     }
 
     /// <summary>
