@@ -5,6 +5,8 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Web;
+using System.Xml.Linq;
 using Newtonsoft.Json;
 using AvailableFiles = System.Collections.Generic.Dictionary<System.String, System.Collections.Generic.Dictionary<System.String,
     System.Collections.Generic.List<System.Collections.Generic.Dictionary<System.String, TorBoxNET.TorrentInstantAvailabilityFile>>>>;
@@ -15,10 +17,12 @@ namespace TorBoxNET;
 public class TorrentsApi
 {
     private readonly Requests _requests;
+    private readonly Store _store;
 
     internal TorrentsApi(HttpClient httpClient, Store store)
     {
         _requests = new Requests(httpClient, store);
+        _store = store;
     }
 
     /// <summary>
@@ -161,7 +165,7 @@ public class TorrentsApi
     ///     Modify a torrent from torrents list.
     /// </summary>
     /// <param name="id">The ID of the torrent</param>
-    /// <param name="action">The action to be performed on the torrent, valid options are pause, resume, reannounce, delete.</param>
+    /// <param name="action">The action to be performed on the torrent, valid options are: pause, resume, reannounce, delete.</param>
     /// <param name="cancellationToken">
     ///     A cancellation token that can be used by other objects or threads to receive notice of
     ///     cancellation.
@@ -182,7 +186,7 @@ public class TorrentsApi
     ///     Modify a torrent from queued torrents list.
     /// </summary>
     /// <param name="id">The ID of the torrent</param>
-    /// <param name="action">The action to be performed on the torrent, valid options are delete.</param>
+    /// <param name="action">The action to be performed on the torrent, valid options are: delete.</param>
     /// <param name="cancellationToken">
     ///     A cancellation token that can be used by other objects or threads to receive notice of
     ///     cancellation.
@@ -197,5 +201,38 @@ public class TorrentsApi
         };
         var jsonContent = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
         return await _requests.PostRequestRawAsync<Response>("torrents/controlqueued", jsonContent, true, cancellationToken);
+    }
+
+    /// <summary>
+    ///     Request download link for torrent.
+    /// </summary>
+    /// <param name="torrent_id"> Id of torrent.</param>
+    /// <param name="file_id"> File ID for file.</param>
+    /// <param name="zip">Whether to zip files, if true then all files are donwloaded, no matter the value of file_id</param>
+    /// <param name="cancellationToken">
+    ///     A cancellation token that can be used by other objects or threads to receive notice of
+    ///     cancellation.
+    /// </param>
+    /// <returns></returns>
+    public async Task<Response<String>> TorrentDownloadAsync(int torrent_id, int? file_id, bool zip = false, CancellationToken cancellationToken = default)
+    {
+        var data = new List<KeyValuePair<string, string?>>
+    {
+        new KeyValuePair<string, string?>("token", _store.BearerToken),
+        new KeyValuePair<string, string?>("torrent_id", torrent_id.ToString()),
+        new KeyValuePair<string, string?>("file_id", file_id.ToString()),
+        new KeyValuePair<string, string?>("zip", zip.ToString())
+    };
+
+        // Convert to URL parameters
+        var queryString = HttpUtility.ParseQueryString(string.Empty);
+        foreach (var param in data)
+        {
+            queryString[param.Key] = param.Value;
+        }
+        string urlParameters = queryString.ToString();
+
+        var jsonContent = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
+        return await _requests.GetRequestAsync<Response<String>>($"torrents/controlqueued{urlParameters}", true, cancellationToken);
     }
 }
