@@ -218,7 +218,7 @@ public class TorrentsApi
     {
         var data = new List<KeyValuePair<string, string?>>
     {
-        new KeyValuePair<string, string?>("token", _store.BearerToken),
+        new KeyValuePair<string, string?>("token", _store.BearerToken), // idk if oauth token would even work
         new KeyValuePair<string, string?>("torrent_id", torrent_id.ToString()),
         new KeyValuePair<string, string?>("file_id", file_id.ToString()),
         new KeyValuePair<string, string?>("zip", zip.ToString())
@@ -233,6 +233,7 @@ public class TorrentsApi
         string urlParameters = queryString.ToString();
 
         var jsonContent = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
-        return await _requests.GetRequestAsync<Response<String>>($"torrents/controlqueued{urlParameters}", true, cancellationToken);
+
+        return await _requests.GetRequestAsync<Response<String>>($"torrents/requestdl?{urlParameters}", true, cancellationToken);
     }
 }
