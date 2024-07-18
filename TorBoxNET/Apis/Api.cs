@@ -41,17 +41,12 @@ public class ApiApi
     }
 
     /// <summary>
-    ///     Get server time in ISO, raw data returned.
-    /// This request does not need to be authenticated.
+    ///     Get server time in ISO, raw data returned. Server time assumed to be UTC
     /// </summary>
-    /// <param name="cancellationToken">
-    ///     A cancellation token that can be used by other objects or threads to receive notice of
-    ///     cancellation.
-    /// </param>
-    /// <returns>DateTimeOffset with the current server time with offset.</returns>
-    public async Task<DateTimeOffset> GetIsoTimeAsync(CancellationToken cancellationToken = default)
+    /// <returns>DateTimeOffset with the current UTC time with offset.</returns>
+    public DateTimeOffset GetIsoTimeAsync()
     {
-        var result = await _requests.GetRequestAsync("time/iso", false, cancellationToken);
+        string result = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss+0000");
 
         return DateTimeOffset.ParseExact(result, "yyyy-MM-ddTHH:mm:sszzz", CultureInfo.InvariantCulture);
     }
