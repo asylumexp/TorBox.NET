@@ -39,7 +39,7 @@ public class TorrentsApi
     public async Task<Int64> GetTotal(bool skipCache = false,
                                       CancellationToken cancellationToken = default)
     {
-        var res = await GetAsync(skipCache);
+        var res = await GetCurrentAsync(skipCache);
 
         if (res == null)
         {
@@ -60,7 +60,7 @@ public class TorrentsApi
     ///     cancellation.
     /// </param>
     /// <returns>List of torrents.</returns>
-    public async Task<List<Torrent>?> GetAsync(bool skipCache = false,
+    public async Task<List<Torrent>?> GetCurrentAsync(bool skipCache = false,
                                       CancellationToken cancellationToken = default)
     {
         var list = await _requests.GetRequestAsync("torrents/mylist", true, cancellationToken);
@@ -75,6 +75,35 @@ public class TorrentsApi
         return JsonConvert.DeserializeObject<Response<List<Torrent>>>(list)?.Data;
     }
 
+    public async Task<List<Torrent>?> GetQueuedAsync(bool skipCache = false,
+                                  CancellationToken cancellationToken = default)
+    {
+        var list = await _requests.GetRequestAsync("torrents/getqueued", true, cancellationToken);
+
+        Console.WriteLine(list);
+
+        if (list == null)
+        {
+            return null;
+        }
+
+        var queuedTorrents = JsonConvert.DeserializeObject<Response<List<QueuedTorrent>>>(list)?.Data;
+
+        var torrents = queuedTorrents.Select(torrent => new Torrent
+        {
+            Id = torrent.Id,
+            AuthId = torrent.AuthId,
+            Hash = torrent.Hash,
+            Name = torrent.Name,
+            Magnet = torrent.Magnet,
+            CreatedAt = torrent.CreatedAt,
+            DownloadState = "queued",
+            TorrentFile = torrent.TorrentFile
+        }).ToList();
+
+        return torrents;
+    }
+
     /// <summary>
     ///     Get information about the torrent.
     /// </summary>
@@ -87,17 +116,30 @@ public class TorrentsApi
     ///     cancellation.
     /// </param>
     /// <returns>Info about the torrent.</returns>
-    public async Task<Torrent?> GetInfoAsync(int id,
+    public async Task<Torrent?> GetInfoAsync(string hash,
                                              bool skipCache = false,
                                              CancellationToken cancellationToken = default)
     {
-        var res = await GetAsync(skipCache);
+        var currentTorrents = await GetCurrentAsync(skipCache);
 
-        if (res != null)
+        if (currentTorrents != null)
         {
-            foreach (var torrent in res)
+            foreach (var torrent in currentTorrents)
             {
-                if (torrent.Id == id)
+                if (torrent.Hash == hash)
+                {
+                    return torrent;
+                }
+            }
+        }
+
+        var queuedTorrents = await GetQueuedAsync(skipCache);
+
+        if (queuedTorrents != null)
+        {
+            foreach (var torrent in queuedTorrents)
+            {
+                if (torrent.Hash == hash)
                 {
                     return torrent;
                 }

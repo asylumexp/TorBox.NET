@@ -9,11 +9,4 @@ var rdt = new TorBoxNetClient();
 
 Console.Clear();
 
-
-var a = await rdt.Torrents.ControlAsync(77927, "resume");
-
-
-Console.WriteLine(a.Success);
-
-Console.WriteLine(a.Error);
-Console.WriteLine(a.Detail);
+Console.WriteLine(await rdt.Torrents.GetInfoAsync("8b42bd038969c2229f8652b59a596caf41e8b703"));
