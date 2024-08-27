@@ -63,7 +63,7 @@ public class TorrentsApi
     public async Task<List<Torrent>?> GetCurrentAsync(bool skipCache = false,
                                       CancellationToken cancellationToken = default)
     {
-        var list = await _requests.GetRequestAsync("torrents/mylist", true, cancellationToken);
+        var list = await _requests.GetRequestAsync($"torrents/mylist?bypass_cache={skipCache}", true, cancellationToken);
 
         Console.WriteLine(list);
 

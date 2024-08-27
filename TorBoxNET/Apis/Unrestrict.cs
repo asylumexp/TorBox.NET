@@ -20,19 +20,11 @@ public class UnrestrictApi
     ///     cancellation.
     /// </param>
     /// <returns>Information about the link that was unrestricted.</returns>
-    public async Task<UnrestrictLink> LinkAsync(String link,
-                                                String? password = null,
-                                                Boolean remote = false, 
+    public async Task<Response<String>> LinkAsync(String torrentList,
                                                 CancellationToken cancellationToken = default)
     {
-        var data = new[]
-        {
-            new KeyValuePair<String, String?>("link", link),
-            new KeyValuePair<String, String?>("password", password),
-            new KeyValuePair<String, String?>("remote", remote ? "1" : "0")
-        };
-
-        return await _requests.PostRequestAsync<UnrestrictLink>("torrents/requestdl", data, true, cancellationToken);
+        var torrentFile = torrentList.ToList()!;
+        return await _requests.GetRequestAsync<Response<String>>($"torrents/requestdl?torrent_id={torrentFile[0]}&file_id={torrentFile[1]}", true, cancellationToken);
     }
 
     /// <summary>
