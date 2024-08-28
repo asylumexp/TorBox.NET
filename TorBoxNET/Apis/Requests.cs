@@ -166,6 +166,12 @@ internal class Requests
     {
         return await Request<T>(Store.ApiUrl, url, requireAuthentication, RequestType.Get, null, cancellationToken);
     }
+    public async Task<T> GetLinkRequestAsync<T>(String url, Boolean requireAuthentication, CancellationToken cancellationToken)
+    where T : class, new()
+    {
+        url += $"&token={_store.BearerToken}";
+        return await Request<T>(Store.ApiUrl, url, requireAuthentication, RequestType.Get, null, cancellationToken);
+    }
 
     public async Task PostRequestAsync(String url, IEnumerable<KeyValuePair<String, String?>>? data, Boolean requireAuthentication, CancellationToken cancellationToken)
     {

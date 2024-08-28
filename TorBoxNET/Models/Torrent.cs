@@ -79,7 +79,7 @@ namespace TorBoxNET
         public int InactiveCheck { get; set; }
 
         [JsonProperty("availability")]
-        public int Availability { get; set; }
+        public float Availability { get; set; }
 
         [JsonProperty("download_finished")]
         public bool DownloadFinished { get; set; }

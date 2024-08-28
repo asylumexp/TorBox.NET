@@ -1,4 +1,6 @@
-﻿namespace TorBoxNET;
+﻿using System;
+
+namespace TorBoxNET;
 
 public class UnrestrictApi
 {
@@ -20,11 +22,11 @@ public class UnrestrictApi
     ///     cancellation.
     /// </param>
     /// <returns>Information about the link that was unrestricted.</returns>
-    public async Task<Response<String>> LinkAsync(String torrentList,
+    public async Task<Response<String>> LinkAsync(String torrentID,
+                                                  String fileID,
                                                 CancellationToken cancellationToken = default)
     {
-        var torrentFile = torrentList.ToList()!;
-        return await _requests.GetRequestAsync<Response<String>>($"torrents/requestdl?torrent_id={torrentFile[0]}&file_id={torrentFile[1]}", true, cancellationToken);
+        return await _requests.GetLinkRequestAsync<Response<String>>($"torrents/requestdl?torrent_id={torrentID}&file_id={fileID}", true, cancellationToken);
     }
 
     /// <summary>
