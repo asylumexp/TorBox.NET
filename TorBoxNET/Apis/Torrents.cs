@@ -1,16 +1,6 @@
-﻿using System;
-using System.Collections.Specialized;
-using System.Drawing;
-using System.IO;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
-using System.Text;
+﻿using System.Text;
 using System.Web;
-using System.Xml.Linq;
 using Newtonsoft.Json;
-using AvailableFiles = System.Collections.Generic.Dictionary<System.String, System.Collections.Generic.Dictionary<System.String,
-    System.Collections.Generic.List<System.Collections.Generic.Dictionary<System.String, TorBoxNET.TorrentInstantAvailabilityFile>>>>;
-using AvailableFiles2 = System.Collections.Generic.Dictionary<System.String, System.Collections.Generic.List<System.Collections.Generic.Dictionary<System.String, TorBoxNET.TorrentInstantAvailabilityFile>>>;
 
 namespace TorBoxNET;
 
@@ -243,6 +233,21 @@ public class TorrentsApi
         };
         var jsonContent = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
         return await _requests.PostRequestRawAsync<Response>("torrents/controlqueued", jsonContent, true, cancellationToken);
+    }
+
+    /// <summary>
+    ///     Modify a torrent from queued torrents list.
+    /// </summary>
+    /// <param name="id">The ID of the torrent</param>
+    /// <param name="action">The action to be performed on the torrent, valid options are: delete.</param>
+    /// <param name="cancellationToken">
+    ///     A cancellation token that can be used by other objects or threads to receive notice of
+    ///     cancellation.
+    /// </param>
+    /// <returns></returns>
+    public async Task<Response<List<AvailableTorrent?>>> GetAvailabilityAsync(string hash, bool listFiles = false, CancellationToken cancellationToken = default)
+    {
+        return await _requests.GetRequestAsync<Response<List<AvailableTorrent?>>>($"torrents/checkcached?hash={hash}&format=list&list_files={listFiles}", true, cancellationToken);
     }
 
     /// <summary>

@@ -7,6 +7,5 @@ using System.Text;
 
 var rdt = new TorBoxNetClient();
 
-Console.Clear();
 
-Console.WriteLine(await rdt.Torrents.GetInfoAsync("8b42bd038969c2229f8652b59a596caf41e8b703"));
+Console.WriteLine(await rdt.Torrents.GetAvailabilityAsync("8b42bd038969c2229f8652b59a596caf41e8b703"));
