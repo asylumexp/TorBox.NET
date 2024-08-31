@@ -7,5 +7,5 @@ using System.Text;
 
 var rdt = new TorBoxNetClient();
 
-
-Console.WriteLine(await rdt.Torrents.GetAvailabilityAsync("8b42bd038969c2229f8652b59a596caf41e8b703"));
+var res = await rdt.Torrents.ControlAsync("f84a7252f0e93d2ae23792557b04ec6e1fb07e10", "delete");
+Console.WriteLine(res.Success);

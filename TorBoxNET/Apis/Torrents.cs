@@ -55,8 +55,6 @@ public class TorrentsApi
     {
         var list = await _requests.GetRequestAsync($"torrents/mylist?bypass_cache={skipCache}", true, cancellationToken);
 
-        Console.WriteLine(list);
-
         if (list == null)
         {
             return null;
@@ -69,8 +67,6 @@ public class TorrentsApi
                                   CancellationToken cancellationToken = default)
     {
         var list = await _requests.GetRequestAsync("torrents/getqueued", true, cancellationToken);
-
-        Console.WriteLine(list);
 
         if (list == null)
         {
@@ -203,36 +199,23 @@ public class TorrentsApi
     ///     cancellation.
     /// </param>
     /// <returns></returns>
-    public async Task<Response> ControlAsync(int id, string action, CancellationToken cancellationToken = default)
+    public async Task<Response> ControlAsync(string hash, string action, CancellationToken cancellationToken = default)
     {
+        var info = await GetInfoAsync(hash, skipCache: true);
         var data = new
         {
-            torrent_id = id,
+            torrent_id = info!.Id,
             operation = action
         };
         var jsonContent = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
-        return await _requests.PostRequestRawAsync<Response>("torrents/controltorrent", jsonContent, true, cancellationToken);
-    }
-
-    /// <summary>
-    ///     Modify a torrent from queued torrents list.
-    /// </summary>
-    /// <param name="id">The ID of the torrent</param>
-    /// <param name="action">The action to be performed on the torrent, valid options are: delete.</param>
-    /// <param name="cancellationToken">
-    ///     A cancellation token that can be used by other objects or threads to receive notice of
-    ///     cancellation.
-    /// </param>
-    /// <returns></returns>
-    public async Task<Response> ControlQueuedAsync(int id, string action = "delete", CancellationToken cancellationToken = default)
-    {
-        var data = new
+        if (info.DownloadState == "queued")
         {
-            queued_id = id,
-            operation = action
-        };
-        var jsonContent = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
-        return await _requests.PostRequestRawAsync<Response>("torrents/controlqueued", jsonContent, true, cancellationToken);
+            return await _requests.PostRequestRawAsync<Response>("torrents/controlqueued", jsonContent, true, cancellationToken);
+        }
+        else
+        {
+            return await _requests.PostRequestRawAsync<Response>("torrents/controltorrent", jsonContent, true, cancellationToken);
+        }
     }
 
     /// <summary>
