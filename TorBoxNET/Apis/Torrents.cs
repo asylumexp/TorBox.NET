@@ -159,7 +159,11 @@ public class TorrentsApi
             content.Add(fileContent);
             content.Add(new StringContent(seeding.ToString()), "seed");
             content.Add(new StringContent(allowZip.ToString()), "allow_zip");
-            content.Add(new StringContent(name), "name");
+
+            if (name != null)
+            {
+                content.Add(new StringContent(name), "name");
+            }
 
             return await _requests.PostRequestMultipartAsync<Response<TorrentAddResult>>("torrents/createtorrent", content, true, cancellationToken);
         }
