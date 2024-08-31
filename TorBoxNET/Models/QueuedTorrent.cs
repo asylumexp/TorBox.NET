@@ -19,7 +19,7 @@ namespace TorBoxNET
         public string Magnet { get; set; } = null!;
 
         [JsonProperty("torrent_file")]
-        public bool TorrentFile { get; set; }
+        public string? TorrentFile { get; set; } = null!;
 
         [JsonProperty("hash")]
         public string Hash { get; set; } = null!;
