@@ -26,10 +26,10 @@ public class AvailableTorrent
     /// Torrent files
     /// </summary>
     [JsonProperty("files")]
-    public List<File>? Files { get; set; } = null!;
+    public List<AvailableTorrentFile>? Files { get; set; } = null!;
 }
 
-public class File
+public class AvailableTorrentFile
 {
     /// <summary>
     /// File name
