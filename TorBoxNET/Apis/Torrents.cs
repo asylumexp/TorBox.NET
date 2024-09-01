@@ -84,7 +84,12 @@ public class TorrentsApi
             Magnet = torrent.Magnet,
             CreatedAt = torrent.CreatedAt,
             DownloadState = "queued",
-            TorrentFile = torrent.TorrentFile != null
+            TorrentFile = torrent.TorrentFile != null,
+            Progress = 0.0,
+            Files = [],
+            DownloadSpeed = 0,
+            Seeds = 0,
+            UpdatedAt = torrent.CreatedAt
         }).ToList();
 
         return torrents;

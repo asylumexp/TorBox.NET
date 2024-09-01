@@ -66,11 +66,16 @@ internal class Requests
                 {
                     var realDebridException = ParseRealDebridException(text);
 
-                    if (realDebridException != null)
+                    if (realDebridException!.Error == "ACTIVE_LIMIT")
+                    {}
+                    else if (realDebridException != null)
                     {
                         throw realDebridException;
                     }
-                    throw new Exception(text);
+                    else
+                    {
+                        throw new Exception(text);
+                    }
                 }
 
                 if (headerOutput != null)
