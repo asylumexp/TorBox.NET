@@ -50,7 +50,7 @@ public class TorrentsApi
     ///     cancellation.
     /// </param>
     /// <returns>List of torrents.</returns>
-    public async Task<List<Torrent>?> GetCurrentAsync(bool skipCache = false,
+    public async Task<List<TorrentInfoResult>?> GetCurrentAsync(bool skipCache = false,
                                       CancellationToken cancellationToken = default)
     {
         var list = await _requests.GetRequestAsync($"torrents/mylist?bypass_cache={skipCache}", true, cancellationToken);
@@ -60,10 +60,10 @@ public class TorrentsApi
             return null;
         }
 
-        return JsonConvert.DeserializeObject<Response<List<Torrent>>>(list)?.Data;
+        return JsonConvert.DeserializeObject<Response<List<TorrentInfoResult>>>(list)?.Data;
     }
 
-    public async Task<List<Torrent>?> GetQueuedAsync(bool skipCache = false,
+    public async Task<List<TorrentInfoResult>?> GetQueuedAsync(bool skipCache = false,
                                   CancellationToken cancellationToken = default)
     {
         var list = await _requests.GetRequestAsync("torrents/getqueued", true, cancellationToken);
@@ -75,7 +75,7 @@ public class TorrentsApi
 
         var queuedTorrents = JsonConvert.DeserializeObject<Response<List<QueuedTorrent>>>(list)?.Data;
 
-        var torrents = queuedTorrents.Select(torrent => new Torrent
+        var torrents = queuedTorrents.Select(torrent => new TorrentInfoResult
         {
             Id = torrent.Id,
             AuthId = torrent.AuthId,
@@ -107,7 +107,7 @@ public class TorrentsApi
     ///     cancellation.
     /// </param>
     /// <returns>Info about the torrent.</returns>
-    public async Task<Torrent?> GetInfoAsync(string hash,
+    public async Task<TorrentInfoResult?> GetInfoAsync(string hash,
                                              bool skipCache = false,
                                              CancellationToken cancellationToken = default)
     {

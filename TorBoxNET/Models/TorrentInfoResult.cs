@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace TorBoxNET
 {
-    public class Torrent
+    public class TorrentInfoResult
     {
         [JsonProperty("id")]
         public int Id { get; set; }
@@ -70,7 +70,7 @@ namespace TorBoxNET
         public bool DownloadPresent { get; set; }
 
         [JsonProperty("files")]
-        public List<TorrentFile> Files { get; set; } = null!;
+        public List<TorrentInfoResultFile> Files { get; set; } = null!;
 
         [JsonProperty("download_path")]
         public string DownloadPath { get; set; } = null!;
@@ -112,7 +112,7 @@ namespace TorBoxNET
         public string? TrackerMessage { get; set; }
     }
 
-    public class TorrentFile
+    public class TorrentInfoResultFile
     {
         [JsonProperty("id")]
         public int Id { get; set; }
