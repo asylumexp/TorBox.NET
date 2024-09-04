@@ -22,12 +22,28 @@ public class UnrestrictApi
     ///     cancellation.
     /// </param>
     /// <returns>Information about the link that was unrestricted.</returns>
-    public async Task<Response<String>> LinkAsync(String torrentID,
-                                                  String fileID,
-                                                CancellationToken cancellationToken = default)
+    public async Task<Response<String>> LinkAsync(string torrentID,
+                                                  string? fileID = null,
+                                                  string? zipped = null,
+                                                  CancellationToken cancellationToken = default)
     {
-        return await _requests.GetLinkRequestAsync<Response<String>>($"torrents/requestdl?torrent_id={torrentID}&file_id={fileID}", true, cancellationToken);
+        var queryParams = new List<string> { $"torrent_id={torrentID}" };
+
+        if (fileID is not null)
+        {
+            queryParams.Add($"file_id={fileID}");
+        }
+
+        if (zipped is not null)
+        {
+            queryParams.Add($"zipped={zipped}");
+        }
+
+        var url = $"torrents/requestdl?{string.Join("&", queryParams)}";
+
+        return await _requests.GetLinkRequestAsync<Response<string>>(url, true, cancellationToken);
     }
+
 
     /// <summary>
     ///     Unrestrict a hoster folder link and get individual links, returns an empty array if no links found.

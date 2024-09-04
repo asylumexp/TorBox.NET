@@ -66,7 +66,7 @@ internal class Requests
                 {
                     var realDebridException = ParseRealDebridException(text);
 
-                    if (realDebridException!.Error == "ACTIVE_LIMIT")
+                    if (realDebridException?.Error == "ACTIVE_LIMIT")
                     {}
                     else if (realDebridException != null)
                     {
