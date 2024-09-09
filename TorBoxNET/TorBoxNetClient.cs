@@ -8,15 +8,7 @@ public class TorBoxNetClient
 {
     private readonly Store _store = new();
 
-    public ApiApi Api { get; }
-    public AuthenticationApi Authentication { get; }
-    public DownloadsApi Downloads { get; }
-    public HostsApi Hosts { get; }
-    public SettingsApi Settings { get; }
-    public StreamingApi Streaming { get; }
     public TorrentsApi Torrents { get; }
-    public TrafficApi Traffic { get; }
-    public UnrestrictApi Unrestrict { get; }
     public UserApi User { get; }
         
     /// <summary>
@@ -41,15 +33,7 @@ public class TorBoxNetClient
 
         var client = httpClient ?? new HttpClient();
 
-        Api = new ApiApi(client, _store);
-        Authentication = new AuthenticationApi(client, _store);
-        Downloads = new DownloadsApi(client, _store);
-        Hosts = new HostsApi(client, _store);
-        Settings = new SettingsApi(client, _store);
-        Streaming = new StreamingApi(client, _store);
         Torrents = new TorrentsApi(client, _store);
-        Traffic = new TrafficApi(client, _store);
-        Unrestrict = new UnrestrictApi(client, _store);
         User = new UserApi(client, _store);
     }
 

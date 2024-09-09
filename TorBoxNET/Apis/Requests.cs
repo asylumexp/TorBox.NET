@@ -49,9 +49,9 @@ internal class Requests
 
                 if (response.StatusCode == HttpStatusCode.Unauthorized && requireAuthentication && _store.AuthenticationType == AuthenticationType.OAuth2)
                 {
-                    var realDebridException = ParseRealDebridException(text);
+                    var realDebridException = ParseTorBoxException(text);
 
-                    if (realDebridException?.ErrorCode == 8)
+                    if (realDebridException?.Error == "BAD_TOKEN")
                     {
                         throw new AccessTokenExpired();
                     }
@@ -64,7 +64,7 @@ internal class Requests
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    var realDebridException = ParseRealDebridException(text);
+                    var realDebridException = ParseTorBoxException(text);
 
                     if (realDebridException?.Error == "ACTIVE_LIMIT")
                     {}
@@ -89,7 +89,7 @@ internal class Requests
 
                 return (text, null);
             }
-            catch (RealDebridException)
+            catch (TorBoxException)
             {
                 throw;
             }
@@ -232,7 +232,7 @@ internal class Requests
         Delete
     }
 
-    private static RealDebridException? ParseRealDebridException(String? text)
+    private static TorBoxException? ParseTorBoxException(String? text)
     {
         try
         {
@@ -241,11 +241,11 @@ internal class Requests
                 return null;
             }
 
-            var requestError = JsonConvert.DeserializeObject<RequestError>(text);
+            var requestError = JsonConvert.DeserializeObject<Response>(text);
 
             if (requestError?.Error != null)
             {
-                return new RealDebridException(requestError.Error, requestError.ErrorCode);
+                return new TorBoxException(requestError.Error, requestError.Detail);
             }
 
             return null;

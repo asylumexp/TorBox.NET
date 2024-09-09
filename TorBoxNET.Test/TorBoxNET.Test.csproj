@@ -7,14 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="avatar.png" />
     <None Remove="big-buck-bunny.torrent" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="avatar.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="big-buck-bunny.torrent">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -34,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RDNET\RDNET.csproj" />
+    <ProjectReference Include="..\TorBoxNET\TorBoxNET.csproj" />
   </ItemGroup>
 
   <ItemGroup>
