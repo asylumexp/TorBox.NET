@@ -4,6 +4,10 @@ using Newtonsoft.Json;
 
 namespace TorBoxNET;
 
+/// <summary>
+/// Provides methods for interacting with the torrent-related API endpoints, including adding, 
+/// retrieving, and controlling torrents, as well as requesting download links.
+/// </summary>
 public class TorrentsApi
 {
     private readonly Requests _requests;
@@ -16,42 +20,42 @@ public class TorrentsApi
     }
 
     /// <summary>
-    ///     Get the number of torrents.
+    /// Retrieves the total number of user torrents.
     /// </summary>
     /// <param name="skipCache">
-    ///     Whether to get refresh cached data on server. Defaults to false.
+    /// Whether to bypass the cache and fetch fresh data from the server. Defaults to false.
     /// </param>
     /// <param name="cancellationToken">
-    ///     A cancellation token that can be used by other objects or threads to receive notice of
-    ///     cancellation.
+    /// A token to cancel the task if necessary.
     /// </param>
-    /// <returns>The number of torrents.</returns>
-    public async Task<Int64> GetTotal(bool skipCache = false,
-                                      CancellationToken cancellationToken = default)
+    /// <returns>
+    /// The total number of torrents, or -1 if the request fails.
+    /// </returns>
+    public async Task<Int64> GetTotal(bool skipCache = false, CancellationToken cancellationToken = default)
     {
-        var res = await GetCurrentAsync(skipCache);
+        var res = await GetCurrentAsync(skipCache, cancellationToken);
 
         if (res == null)
         {
-            return 0;
+            return -1;
         }
 
         return res.Count;
     }
 
     /// <summary>
-    ///     Get user torrents list.
+    /// Fetches the list of active torrents for the user.
     /// </summary>
     /// <param name="skipCache">
-    ///     Whether to get refresh cached data on server. Defaults to false.
+    /// Whether to bypass the cache and retrieve fresh data from the server. Defaults to false.
     /// </param>
     /// <param name="cancellationToken">
-    ///     A cancellation token that can be used by other objects or threads to receive notice of
-    ///     cancellation.
+    /// A token to cancel the task if necessary.
     /// </param>
-    /// <returns>List of torrents.</returns>
-    public async Task<List<TorrentInfoResult>?> GetCurrentAsync(bool skipCache = false,
-                                      CancellationToken cancellationToken = default)
+    /// <returns>
+    /// A list of torrents if the request succeeds, otherwise null.
+    /// </returns>
+    public async Task<List<TorrentInfoResult>?> GetCurrentAsync(bool skipCache = false, CancellationToken cancellationToken = default)
     {
         var list = await _requests.GetRequestAsync($"torrents/mylist?bypass_cache={skipCache}", true, cancellationToken);
 
@@ -63,8 +67,19 @@ public class TorrentsApi
         return JsonConvert.DeserializeObject<Response<List<TorrentInfoResult>>>(list)?.Data;
     }
 
-    public async Task<List<TorrentInfoResult>?> GetQueuedAsync(bool skipCache = false,
-                                  CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Retrieves a list of torrents currently queued for download.
+    /// </summary>
+    /// <param name="skipCache">
+    /// Whether to bypass the cache and retrieve fresh data from the server. Defaults to false.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A token to cancel the task if necessary.
+    /// </param>
+    /// <returns>
+    /// A list of queued torrents if the request succeeds, otherwise null.
+    /// </returns>
+    public async Task<List<TorrentInfoResult>?> GetQueuedAsync(bool skipCache = false, CancellationToken cancellationToken = default)
     {
         var list = await _requests.GetRequestAsync("torrents/getqueued", true, cancellationToken);
 
@@ -96,22 +111,22 @@ public class TorrentsApi
     }
 
     /// <summary>
-    ///     Get information about the torrent.
+    /// Retrieves detailed information about a specific torrent by its hash.
+    /// Checks both active and queued torrents.
     /// </summary>
-    /// <param name="id">The ID of the torrent</param>
+    /// <param name="hash">The unique hash identifier of the torrent.</param>
     /// <param name="skipCache">
-    ///     Whether to get refresh cached data on server. Defaults to false.
+    /// Whether to bypass the cache and retrieve fresh data from the server. Defaults to false.
     /// </param>
     /// <param name="cancellationToken">
-    ///     A cancellation token that can be used by other objects or threads to receive notice of
-    ///     cancellation.
+    /// A token to cancel the task if necessary.
     /// </param>
-    /// <returns>Info about the torrent.</returns>
-    public async Task<TorrentInfoResult?> GetInfoAsync(string hash,
-                                             bool skipCache = false,
-                                             CancellationToken cancellationToken = default)
+    /// <returns>
+    /// Information about the torrent if found, otherwise null.
+    /// </returns>
+    public async Task<TorrentInfoResult?> GetInfoAsync(string hash, bool skipCache = false, CancellationToken cancellationToken = default)
     {
-        var currentTorrents = await GetCurrentAsync(skipCache);
+        var currentTorrents = await GetCurrentAsync(skipCache, cancellationToken);
 
         if (currentTorrents != null)
         {
@@ -124,7 +139,7 @@ public class TorrentsApi
             }
         }
 
-        var queuedTorrents = await GetQueuedAsync(skipCache);
+        var queuedTorrents = await GetQueuedAsync(skipCache, cancellationToken);
 
         if (queuedTorrents != null)
         {
@@ -141,14 +156,20 @@ public class TorrentsApi
     }
 
     /// <summary>
-    ///     Add a torrent file to add to the torrent client.
+    /// Adds a torrent file to the torrent client.
     /// </summary>
-    /// <param name="file">The byte array of the file.</param>
-    /// <param name="cancellationToken">
-    ///     A cancellation token that can be used by other objects or threads to receive notice of
-    ///     cancellation.
+    /// <param name="file">The torrent file as a byte array.</param>
+    /// <param name="seeding">
+    /// Seeding preference: 1 for auto, 2 for seed, and 3 for no seed.
     /// </param>
-    /// <returns>Info about the added torrent.</returns>
+    /// <param name="allowZip">Whether to allow zipped torrents.</param>
+    /// <param name="name">Optional name for the torrent.</param>
+    /// <param name="cancellationToken">
+    /// A token to cancel the task if necessary.
+    /// </param>
+    /// <returns>
+    /// The response containing information about the added torrent.
+    /// </returns>
     public async Task<Response<TorrentAddResult>> AddFileAsync(Byte[] file, int seeding = 1, bool allowZip = false, string? name = null, CancellationToken cancellationToken = default)
     {
         using (var content = new MultipartFormDataContent())
@@ -174,43 +195,50 @@ public class TorrentsApi
         }
     }
 
-
     /// <summary>
-    ///     Add a magnet link to add to the torrent client.
+    /// Adds a magnet link to the torrent client.
     /// </summary>
-    /// <param name="magnet">Magnet link</param>
-    /// <param name="seeding">Preference for seeding torrent. 1 is auto. 2 is seed. 3 is don't seed.</param>
-    /// <param name="cancellationToken">
-    ///     A cancellation token that can be used by other objects or threads to receive notice of
-    ///     cancellation.
+    /// <param name="magnet">The magnet link to be added.</param>
+    /// <param name="seeding">
+    /// Seeding preference: 1 for auto, 2 for seed, and 3 for no seed.
     /// </param>
-    /// <returns>Info about the added torrent.</returns>
+    /// <param name="allowZip">Whether to allow zipped torrents.</param>
+    /// <param name="name">Optional name for the torrent.</param>
+    /// <param name="cancellationToken">
+    /// A token to cancel the task if necessary.
+    /// </param>
+    /// <returns>
+    /// The response containing information about the added torrent.
+    /// </returns>
     public async Task<Response<TorrentAddResult>> AddMagnetAsync(string magnet, int seeding = 1, bool allowZip = false, string? name = null, CancellationToken cancellationToken = default)
     {
         var data = new List<KeyValuePair<string, string?>>
-    {
-        new KeyValuePair<string, string?>("magnet", magnet),
-        new KeyValuePair<string, string?>("seed", seeding.ToString()),
-        new KeyValuePair<string, string?>("allow_zip", allowZip.ToString()),
-        new KeyValuePair<string, string?>("name", name)
-    };
+        {
+            new KeyValuePair<string, string?>("magnet", magnet),
+            new KeyValuePair<string, string?>("seed", seeding.ToString()),
+            new KeyValuePair<string, string?>("allow_zip", allowZip.ToString()),
+            new KeyValuePair<string, string?>("name", name)
+        };
 
         return await _requests.PostRequestAsync<Response<TorrentAddResult>>("torrents/createtorrent", data, true, cancellationToken);
     }
 
     /// <summary>
-    ///     Modify a torrent from torrents list.
+    /// Modifies the state of a torrent (e.g., pause, resume, reannounce, delete).
     /// </summary>
-    /// <param name="id">The ID of the torrent</param>
-    /// <param name="action">The action to be performed on the torrent, valid options are: pause, resume, reannounce, delete.</param>
-    /// <param name="cancellationToken">
-    ///     A cancellation token that can be used by other objects or threads to receive notice of
-    ///     cancellation.
+    /// <param name="hash">The unique hash of the torrent.</param>
+    /// <param name="action">
+    /// The action to perform: pause, resume, reannounce, or delete.
     /// </param>
-    /// <returns></returns>
+    /// <param name="cancellationToken">
+    /// A token to cancel the task if necessary.
+    /// </param>
+    /// <returns>
+    /// The response after performing the action.
+    /// </returns>
     public async Task<Response> ControlAsync(string hash, string action, CancellationToken cancellationToken = default)
     {
-        var info = await GetInfoAsync(hash, skipCache: true);
+        var info = await GetInfoAsync(hash, skipCache: true, cancellationToken);
         var data = new
         {
             torrent_id = info!.Id,
@@ -228,31 +256,35 @@ public class TorrentsApi
     }
 
     /// <summary>
-    ///     Modify a torrent from queued torrents list.
+    /// Retrieves the availability of a torrent (whether it's cached and ready to download).
     /// </summary>
-    /// <param name="id">The ID of the torrent</param>
-    /// <param name="action">The action to be performed on the torrent, valid options are: delete.</param>
+    /// <param name="hash">The unique hash identifier of the torrent.</param>
+    /// <param name="listFiles">Whether to include file list in the response.</param>
     /// <param name="cancellationToken">
-    ///     A cancellation token that can be used by other objects or threads to receive notice of
-    ///     cancellation.
+    /// A token to cancel the task if necessary.
     /// </param>
-    /// <returns></returns>
+    /// <returns>
+    /// A response containing availability information for the torrent.
+    /// </returns>
     public async Task<Response<List<AvailableTorrent?>>> GetAvailabilityAsync(string hash, bool listFiles = false, CancellationToken cancellationToken = default)
     {
         return await _requests.GetRequestAsync<Response<List<AvailableTorrent?>>>($"torrents/checkcached?hash={hash}&format=list&list_files={listFiles}", true, cancellationToken);
     }
 
     /// <summary>
-    ///     Request download link for torrent.
+    /// Requests a download link for a specific torrent or file.
     /// </summary>
-    /// <param name="torrent_id"> Id of torrent.</param>
-    /// <param name="file_id"> File ID for file.</param>
-    /// <param name="zip">Whether to zip files, if true then all files are donwloaded, no matter the value of file_id</param>
-    /// <param name="cancellationToken">
-    ///     A cancellation token that can be used by other objects or threads to receive notice of
-    ///     cancellation.
+    /// <param name="torrent_id">The ID of the torrent to download.</param>
+    /// <param name="file_id">The ID of the file within the torrent (optional).</param>
+    /// <param name="zip">
+    /// Whether to download the entire torrent as a ZIP. If true, file_id is ignored.
     /// </param>
-    /// <returns></returns>
+    /// <param name="cancellationToken">
+    /// A token to cancel the task if necessary.
+    /// </param>
+    /// <returns>
+    /// A response containing the download link.
+    /// </returns>
     public async Task<Response<String>> RequestDownloadAsync(int torrent_id, int? file_id, bool zip = false, CancellationToken cancellationToken = default)
     {
         var parameters = HttpUtility.ParseQueryString(string.Empty);

@@ -3,9 +3,9 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Authors>Sam</Authors>
+    <Authors>AsylumEXP, </Authors>
     <Product>TorBox.NET</Product>
-    <Description>A TorBox API proxy for .NET Standard based upon RDNET.</Description>
+    <Description>A TorBox API wrapper for .NET, forked from rogerfar's RDNET.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageId>TorBox.NET</PackageId>
     <PackageProjectUrl>https://github.com/asylumexp/TorBox.NET</PackageProjectUrl>
