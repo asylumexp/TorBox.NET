@@ -3,25 +3,27 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Authors>AsylumEXP, </Authors>
+    <Authors>AsylumEXP, rogerfar</Authors>
     <Product>TorBox.NET</Product>
-    <Description>A TorBox API wrapper for .NET, forked from rogerfar's RDNET.</Description>
+    <Description>A TorBox API wrapper for .NET, based upon rogerfar's RDNET project.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageId>TorBox.NET</PackageId>
     <PackageProjectUrl>https://github.com/asylumexp/TorBox.NET</PackageProjectUrl>
     <RepositoryUrl>https://github.com/asylumexp/TorBox.NET</RepositoryUrl>
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>TorBox</PackageTags>
-    <Version>1.0.0.42</Version>
+    <Version>1.0.1</Version>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <None Include="README.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
 
 </Project>
