@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -7,14 +6,30 @@ namespace TorBoxNET.Test;
 
 public class UserTest
 {
-    [Fact]
-    public async Task User()
-    {
-        var client = new TorBoxNetClient();
-        client.UseApiAuthentication(Setup.API_KEY);
+    private readonly TorBoxNetClient _client;
 
-        var result = await client.User.GetAsync(true);
+    public UserTest()
+    {
+        _client = new TorBoxNetClient();
+        _client.UseApiAuthentication(Setup.API_KEY);
+    }
+
+    [Fact]
+    public async Task GetUser()
+    {
+        var result = await _client.User.GetAsync(true);
 
         Assert.NotNull(result);
     }
+
+    [Fact]
+    public async Task RefreshToken()
+    {
+        var sessionToken = "not_a_valid_session_token";
+        var result = await _client.User.RefreshAsync(sessionToken);
+
+        // Will always fail, but if it isn't null then the request did succeed
+        Assert.NotNull(result);
+    }
+
 }
