@@ -291,7 +291,7 @@ public class TorrentsApi
         parameters["token"] = _store.BearerToken;
         parameters["torrent_id"] = torrent_id.ToString();
         parameters["file_id"] = file_id.ToString();
-        parameters["zip"] = zip.ToString();
+        parameters["zip_link"] = zip.ToString();
 
         return await _requests.GetRequestAsync<Response<String>>($"torrents/requestdl?{parameters}", true, cancellationToken);
     }
