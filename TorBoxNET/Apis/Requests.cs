@@ -49,9 +49,9 @@ internal class Requests
 
                 if (response.StatusCode == HttpStatusCode.Unauthorized && requireAuthentication && _store.AuthenticationType == AuthenticationType.OAuth2)
                 {
-                    var realDebridException = ParseTorBoxException(text);
+                    var torBoxException = ParseTorBoxException(text);
 
-                    if (realDebridException?.Error == "BAD_TOKEN")
+                    if (torBoxException?.Error == "BAD_TOKEN")
                     {
                         throw new AccessTokenExpired();
                     }
@@ -64,13 +64,11 @@ internal class Requests
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    var realDebridException = ParseTorBoxException(text);
+                    var torBoxException = ParseTorBoxException(text);
 
-                    if (realDebridException?.Error == "ACTIVE_LIMIT")
-                    {}
-                    else if (realDebridException != null)
+                    if (torBoxException != null)
                     {
-                        throw realDebridException;
+                        throw torBoxException;
                     }
                     else
                     {
