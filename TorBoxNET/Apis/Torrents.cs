@@ -114,7 +114,7 @@ public class TorrentsApi
     /// Retrieves detailed information about a specific torrent by its ID.
     /// Checks both active and queued torrents.
     /// </summary>
-    /// <param name="hash">The unique identifier of the torrent.</param>
+    /// <param name="id">The unique identifier of the torrent.</param>
     /// <param name="skipCache">
     /// Whether to bypass the cache and retrieve fresh data from the server. Defaults to false.
     /// </param>
@@ -127,6 +127,7 @@ public class TorrentsApi
     public async Task<TorrentInfoResult?> GetIdInfoAsync(int id, bool skipCache = false, CancellationToken cancellationToken = default)
     {
         var currentTorrent = await _requests.GetRequestAsync($"torrents/mylist?bypass_cache={skipCache}", true, cancellationToken);
+
         if (currentTorrent != null) 
         {
             var torrent = JsonConvert.DeserializeObject<Response<TorrentInfoResult?>>(currentTorrent)?.Data;
