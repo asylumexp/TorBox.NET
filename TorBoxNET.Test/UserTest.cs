@@ -22,14 +22,14 @@ public class UserTest
         Assert.NotNull(result);
     }
 
-    [Fact]
-    public async Task RefreshToken()
-    {
-        var sessionToken = "not_a_valid_session_token";
-        var result = await _client.User.RefreshAsync(sessionToken);
+    //[Fact]
+    //public async Task RefreshToken()
+    //{
+    //    var sessionToken = "not_a_valid_session_token";
+    //    var result = await _client.User.RefreshAsync(sessionToken);
 
-        // Will always fail, but if it isn't null then the request did succeed
-        Assert.NotNull(result);
-    }
+    //    // Will always fail, but if it isn't null then the request did succeed
+    //    Assert.NotNull(result);
+    //}
 
 }

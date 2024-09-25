@@ -27,12 +27,12 @@ public class UserApi
         return await _requests.GetRequestAsync<Response<User>>($"user/me?settings={settings}", true, cancellationToken);
     }
 
-    public async Task<Response<User>> RefreshAsync(string sessionToken, CancellationToken cancellationToken = default)
-    {
-        var data = new List<KeyValuePair<string, string?>>
-    {
-        new("session_token", sessionToken),
-    };
-        return await _requests.PostRequestAsync<Response<User>>($"user/refreshtoken", data, true, cancellationToken);
-    }
+    //public async Task<Response<User>> RefreshAsync(string sessionToken, CancellationToken cancellationToken = default)
+    //{
+    //    var data = new List<KeyValuePair<string, string?>>
+    //{
+    //    new("session_token", sessionToken),
+    //};
+    //    return await _requests.PostRequestAsync<Response<User>>($"user/refreshtoken", data, true, cancellationToken);
+    //}
 }
