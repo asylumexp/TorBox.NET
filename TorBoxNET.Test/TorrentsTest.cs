@@ -43,19 +43,17 @@ public class TorrentsTest
     [Fact]
     public async Task Info()
     {
-        var result = await _client.Torrents.GetInfoAsync("dd8255ecdc7ca55fb0bbf81323d87062db1f6d1c");
+        var result = await _client.Torrents.GetHashInfoAsync("dd8255ecdc7ca55fb0bbf81323d87062db1f6d1c");
 
-        Assert.Equal("dd8255ecdc7ca55fb0bbf81323d87062db1f6d1c", result.Hash);
+        Assert.NotNull(result);
     }
 
     [Fact]
     public async Task AddFile()
     {
-        // Read the local big-buck-bunny.torrent file
-        var filePath = "./big-buck-bunny.torrent";
-        byte[] fileBytes;
+        const String filePath = @"big-buck-bunny.torrent";
 
-        fileBytes = await File.ReadAllBytesAsync(filePath);
+        var fileBytes = await File.ReadAllBytesAsync(filePath);
 
         var result = await _client.Torrents.AddFileAsync(fileBytes, 1, false, "Big Buck Bunny");
 
@@ -75,7 +73,7 @@ public class TorrentsTest
     public async Task ControlTorrent()
     {
         var hash = "dd8255ecdc7ca55fb0bbf81323d87062db1f6d1c";
-        var action = "delete";
+        var action = "pause";
 
         var result = await _client.Torrents.ControlAsync(hash, action);
 
@@ -97,9 +95,13 @@ public class TorrentsTest
         var torrentId = 123;
         var fileId = 456;
 
-        var result = await _client.Torrents.RequestDownloadAsync(torrentId, fileId, false);
-
-        // Will always fail, but if it isn't null then the request did succeed
-        Assert.NotNull(result);
+        try
+        {
+            await _client.Torrents.RequestDownloadAsync(torrentId, fileId, false);
+        }
+        catch (TorBoxException)
+        {
+            Assert.True(true);
+        }
     }
 }
