@@ -111,6 +111,48 @@ public class TorrentsApi
     }
 
     /// <summary>
+    /// Retrieves detailed information about a specific torrent by its ID.
+    /// Checks both active and queued torrents.
+    /// </summary>
+    /// <param name="hash">The unique identifier of the torrent.</param>
+    /// <param name="skipCache">
+    /// Whether to bypass the cache and retrieve fresh data from the server. Defaults to false.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A token to cancel the task if necessary.
+    /// </param>
+    /// <returns>
+    /// Information about the torrent if found, otherwise null.
+    /// </returns>
+    public async Task<TorrentInfoResult?> GetIdInfoAsync(int id, bool skipCache = false, CancellationToken cancellationToken = default)
+    {
+        var currentTorrent = await _requests.GetRequestAsync($"torrents/mylist?bypass_cache={skipCache}", true, cancellationToken);
+        if (currentTorrent != null) 
+        {
+            var torrent = JsonConvert.DeserializeObject<Response<TorrentInfoResult?>>(currentTorrent)?.Data;
+            if (torrent != null)
+            {
+                return torrent;
+            }
+        }
+
+        var queuedTorrents = await GetQueuedAsync(skipCache, cancellationToken);
+
+        if (queuedTorrents != null)
+        {
+            foreach (var torrent in queuedTorrents)
+            {
+                if (torrent.Id == id)
+                {
+                    return torrent;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Retrieves detailed information about a specific torrent by its hash.
     /// Checks both active and queued torrents.
     /// </summary>
@@ -124,7 +166,7 @@ public class TorrentsApi
     /// <returns>
     /// Information about the torrent if found, otherwise null.
     /// </returns>
-    public async Task<TorrentInfoResult?> GetInfoAsync(string hash, bool skipCache = false, CancellationToken cancellationToken = default)
+    public async Task<TorrentInfoResult?> GetHashInfoAsync(string hash, bool skipCache = false, CancellationToken cancellationToken = default)
     {
         var currentTorrents = await GetCurrentAsync(skipCache, cancellationToken);
 
@@ -238,7 +280,7 @@ public class TorrentsApi
     /// </returns>
     public async Task<Response> ControlAsync(string hash, string action, CancellationToken cancellationToken = default)
     {
-        var info = await GetInfoAsync(hash, skipCache: true, cancellationToken);
+        var info = await GetHashInfoAsync(hash, skipCache: true, cancellationToken);
         var data = new
         {
             torrent_id = info!.Id,
