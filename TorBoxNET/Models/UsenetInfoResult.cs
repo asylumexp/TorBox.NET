@@ -58,8 +58,6 @@ namespace TorBoxNET
         [JsonProperty("download_finished")]
         public bool DownloadFinished { get; set; }
 
-        [JsonProperty("expires_at")]
-        public DateTimeOffset ExpiresAt { get; set; }
     }
 
     public class UsenetInfoResultFile

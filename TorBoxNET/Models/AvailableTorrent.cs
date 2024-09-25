@@ -5,7 +5,7 @@ namespace TorBoxNET;
 public class AvailableTorrent
 {
     /// <summary>
-    ///     Torrent name in bytes
+    ///     Torrent name
     /// </summary>
     [JsonProperty("name")]
     public string Name { get; set; } = null!;

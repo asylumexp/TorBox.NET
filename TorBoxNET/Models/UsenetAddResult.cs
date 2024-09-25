@@ -2,13 +2,13 @@
 
 namespace TorBoxNET;
 
-public class TorrentAddResult
+public class UsenetAddResult
 {
     [JsonProperty("hash")]
     public string? Hash { get; set; }
 
-    [JsonProperty("torrent_id")]
-    public int? TorrentId { get; set; }
+    [JsonProperty("usenetdownload_id")]
+    public int? UsenetDownloadId { get; set; }
 
     [JsonProperty("auth_id")]
     public string? AuthId { get; set; }
