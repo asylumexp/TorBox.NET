@@ -57,18 +57,12 @@ public class UsenetApi
     {
         var currentDownloads = await GetCurrentAsync(skipCache, cancellationToken);
 
-        if (currentDownloads != null)
+        if (currentDownloads == null)
         {
-            foreach (var item in currentDownloads)
-            {
-                if (item.Hash == hash)
-                {
-                    return item;
-                }
-            }
+            return null;
         }
 
-        return null;
+        return currentDownloads.FirstOrDefault(item => item.Hash == hash);
     }
 
     /// <summary>
@@ -88,12 +82,7 @@ public class UsenetApi
     {
         var currentDownload = await _requests.GetRequestAsync<Response<UsenetInfoResult?>>($"torrents/mylist?bypass_cache={skipCache}", true, cancellationToken);
 
-        if (currentDownload != null)
-        {
-            return currentDownload.Data;
-        }
-
-        return null;
+        return currentDownload?.Data;
     }
 
     /// <summary>
@@ -119,25 +108,29 @@ public class UsenetApi
     /// <returns>
     /// The response containing information about the added download.
     /// </returns>
-    public async Task<Response<TorrentAddResult>> AddFileAsync(Byte[] file, int post_processing = -1, string? name = null, string? password = null, CancellationToken cancellationToken = default)
+    public async Task<Response<UsenetAddResult>> AddFileAsync(Byte[] file, int post_processing = -1, string? name = null, string? password = null, CancellationToken cancellationToken = default)
     {
-        using (var content = new MultipartFormDataContent())
+        using var content = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(file);
+        fileContent.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("form-data")
         {
-            var fileContent = new ByteArrayContent(file);
-            fileContent.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("form-data")
-            {
-                Name = "file",
-                FileName = "nzb.nzb"
-            };
-            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-nzb");
+            Name = "file",
+            FileName = "nzb.nzb"
+        };
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-nzb");
 
-            content.Add(fileContent);
-            content.Add(new StringContent(post_processing.ToString()), "post_processing");
+        content.Add(fileContent, "file");
+        content.Add(new StringContent(post_processing.ToString()), "post_processing");
+        if (name != null)
+        {
             content.Add(new StringContent(name), "name");
-            content.Add(new StringContent(password), "password");
-
-            return await _requests.PostRequestMultipartAsync<Response<TorrentAddResult>>("usenet/createusenetdownload", content, true, cancellationToken);
         }
+        if (password != null)
+        {
+            content.Add(new StringContent(password), "password");
+        }
+
+        return await _requests.PostRequestMultipartAsync<Response<UsenetAddResult>>("usenet/createusenetdownload", content, true, cancellationToken);
     }
 
     /// <summary>
@@ -160,7 +153,7 @@ public class UsenetApi
     /// <returns>
     /// The response containing information about the added download.
     /// </returns>
-    public async Task<Response<TorrentAddResult>> AddLinkAsync(string link, int post_processing = -1, string? name = null, string? password = null, CancellationToken cancellationToken = default)
+    public async Task<Response<UsenetAddResult>> AddLinkAsync(string link, int post_processing = -1, string? name = null, string? password = null, CancellationToken cancellationToken = default)
     {
         var data = new List<KeyValuePair<string, string?>>
         {
@@ -170,7 +163,7 @@ public class UsenetApi
             new KeyValuePair<string, string?>("password", password),
         };
 
-        return await _requests.PostRequestAsync<Response<TorrentAddResult>>("usenet/createusenetdownload", data, true, cancellationToken);
+        return await _requests.PostRequestAsync<Response<UsenetAddResult>>("usenet/createusenetdownload", data, true, cancellationToken);
     }
 
     /// <summary>
@@ -190,28 +183,16 @@ public class UsenetApi
     public async Task<Response> ControlAsync(string hash, string action, bool all = false,  CancellationToken cancellationToken = default)
     {
         var info = await GetHashInfoAsync(hash, skipCache: true, cancellationToken);
+
         var data = new
         {
             usenet_id = info?.Id,
             operation = action,
             all,
         };
+
         var jsonContent = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
-
-        try
-        {
-            var result = await _requests.PostRequestRawAsync<Response>("usenet/controlusenetdownload", jsonContent, true, cancellationToken);
-            return result;
-        }
-        catch (TorBoxException ex)
-        {
-            Console.WriteLine(ex.Message);
-            Console.WriteLine(ex.ErrorDetail);
-            return new Response();
-        }
-        
-
-        
+        return await _requests.PostRequestRawAsync<Response>("usenet/controlusenetdownload", jsonContent, true, cancellationToken);
     }
 
     /// <summary>
@@ -225,9 +206,9 @@ public class UsenetApi
     /// <returns>
     /// A response containing availability information for the download.
     /// </returns>
-    public async Task<Response<List<AvailableTorrent?>>> GetAvailabilityAsync(string hash, bool listFiles = false, CancellationToken cancellationToken = default)
+    public async Task<Response<List<AvailableUsenet?>>> GetAvailabilityAsync(string hash, bool listFiles = false, CancellationToken cancellationToken = default)
     {
-        return await _requests.GetRequestAsync<Response<List<AvailableTorrent?>>>($"usenet/checkcached?hash={hash}&format=list&list_files={listFiles}", true, cancellationToken);
+        return await _requests.GetRequestAsync<Response<List<AvailableUsenet?>>>($"usenet/checkcached?hash={hash}&format=list&list_files={listFiles}", true, cancellationToken);
     }
 
     /// <summary>
@@ -252,6 +233,12 @@ public class UsenetApi
         parameters["file_id"] = file_id.ToString();
         parameters["zip"] = zip.ToString();
 
-        return await _requests.GetRequestAsync<Response<String>>($"usenet/requestdl?{parameters}", true, cancellationToken);
+        var uri = new UriBuilder("usenet/requestdl")
+        {
+            Query = parameters.ToString()
+        };
+
+        return await _requests.GetRequestAsync<Response<String>>(uri.ToString(), true, cancellationToken);
+
     }
 }

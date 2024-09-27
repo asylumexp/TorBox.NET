@@ -288,14 +288,8 @@ public class TorrentsApi
             operation = action
         };
         var jsonContent = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
-        if (info.DownloadState == "queued")
-        {
-            return await _requests.PostRequestRawAsync<Response>("torrents/controlqueued", jsonContent, true, cancellationToken);
-        }
-        else
-        {
-            return await _requests.PostRequestRawAsync<Response>("torrents/controltorrent", jsonContent, true, cancellationToken);
-        }
+        string endpoint = info.DownloadState == "queued" ? "torrents/controlqueued" : "torrents/controltorrent";
+        return await _requests.PostRequestRawAsync<Response>(endpoint, jsonContent, true, cancellationToken);
     }
 
     /// <summary>
