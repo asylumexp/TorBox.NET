@@ -230,15 +230,10 @@ public class UsenetApi
         var parameters = HttpUtility.ParseQueryString(string.Empty);
         parameters["token"] = _store.BearerToken;
         parameters["usenet_id"] = usenet_id.ToString();
-        parameters["file_id"] = file_id.ToString();
-        //parameters["zip"] = zip.ToString();
+        parameters["file_id"] = file_id.ToString() ?? string.Empty;
+        parameters["zip"] = zip.ToString();
 
-        var uri = new UriBuilder("usenet/requestdl")
-        {
-            Query = parameters.ToString()
-        };
-
-        return await _requests.GetRequestAsync<Response<String>>(uri.ToString(), true, cancellationToken);
+        return await _requests.GetRequestAsync<Response<String>>($"usenet/requestdl?{parameters}", true, cancellationToken);
 
     }
 }
