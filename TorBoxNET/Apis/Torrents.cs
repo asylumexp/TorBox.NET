@@ -95,7 +95,7 @@ public interface ITorrentsApi
     /// <returns>
     /// The response containing information about the added torrent.
     /// </returns>
-    Task<Response<TorrentAddResult>> AddFileAsync(Byte[] file, int seeding = 1, bool allowZip = false, string? name = null, CancellationToken cancellationToken = default);
+    Task<Response<TorrentAddResult>> AddFileAsync(Byte[] file, int seeding = 1, bool allowZip = false, string? name = null, bool as_queued = false, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Adds a magnet link to the torrent client.
@@ -112,7 +112,7 @@ public interface ITorrentsApi
     /// <returns>
     /// The response containing information about the added torrent.
     /// </returns>
-    Task<Response<TorrentAddResult>> AddMagnetAsync(string magnet, int seeding = 1, bool allowZip = false, string? name = null, CancellationToken cancellationToken = default);
+    Task<Response<TorrentAddResult>> AddMagnetAsync(string magnet, int seeding = 1, bool allowZip = false, string? name = null, bool as_queued = false, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Modifies the state of a torrent (e.g., pause, resume, reannounce, delete).
@@ -297,7 +297,7 @@ public class TorrentsApi : ITorrentsApi
     }
 
     /// <inheritdoc />
-    public async Task<Response<TorrentAddResult>> AddFileAsync(Byte[] file, int seeding = 1, bool allowZip = false, string? name = null, CancellationToken cancellationToken = default)
+    public async Task<Response<TorrentAddResult>> AddFileAsync(Byte[] file, int seeding = 1, bool allowZip = false, string? name = null, bool as_queued = false, CancellationToken cancellationToken = default)
     {
         using (var content = new MultipartFormDataContent())
         {
@@ -312,6 +312,7 @@ public class TorrentsApi : ITorrentsApi
             content.Add(fileContent);
             content.Add(new StringContent(seeding.ToString()), "seed");
             content.Add(new StringContent(allowZip.ToString()), "allow_zip");
+            content.Add(new StringContent(as_queued.ToString()), "as_queued");
 
             if (name != null)
             {
@@ -323,13 +324,14 @@ public class TorrentsApi : ITorrentsApi
     }
 
     /// <inheritdoc />
-    public async Task<Response<TorrentAddResult>> AddMagnetAsync(string magnet, int seeding = 1, bool allowZip = false, string? name = null, CancellationToken cancellationToken = default)
+    public async Task<Response<TorrentAddResult>> AddMagnetAsync(string magnet, int seeding = 1, bool allowZip = false, string? name = null, bool as_queued = false, CancellationToken cancellationToken = default)
     {
         var data = new List<KeyValuePair<string, string?>>
         {
             new KeyValuePair<string, string?>("magnet", magnet),
             new KeyValuePair<string, string?>("seed", seeding.ToString()),
             new KeyValuePair<string, string?>("allow_zip", allowZip.ToString()),
+            new KeyValuePair<string, string?>("as_queued", as_queued.ToString()),
             new KeyValuePair<string, string?>("name", name)
         };
 

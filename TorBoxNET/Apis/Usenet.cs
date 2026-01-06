@@ -87,7 +87,7 @@ public interface IUsenetApi
     /// <returns>
     /// The response containing information about the added download.
     /// </returns>
-    Task<Response<UsenetAddResult>> AddFileAsync(Byte[] file, int post_processing = -1, string? name = null, string? password = null, CancellationToken cancellationToken = default);
+    Task<Response<UsenetAddResult>> AddFileAsync(Byte[] file, int post_processing = -1, string? name = null, string? password = null, bool as_queued = false, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Adds a nzb link to the remote client.
@@ -109,7 +109,7 @@ public interface IUsenetApi
     /// <returns>
     /// The response containing information about the added download.
     /// </returns>
-    Task<Response<UsenetAddResult>> AddLinkAsync(string link, int post_processing = -1, string? name = null, string? password = null, CancellationToken cancellationToken = default);
+    Task<Response<UsenetAddResult>> AddLinkAsync(string link, int post_processing = -1, string? name = null, string? password = null, bool as_queued = false, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Modifies the state of a torrent (e.g., pause, resume, reannounce, delete).
@@ -243,7 +243,7 @@ public class UsenetApi : IUsenetApi
     }
 
     /// <inheritdoc />
-    public async Task<Response<UsenetAddResult>> AddFileAsync(Byte[] file, int post_processing = -1, string? name = null, string? password = null, CancellationToken cancellationToken = default)
+    public async Task<Response<UsenetAddResult>> AddFileAsync(Byte[] file, int post_processing = -1, string? name = null, string? password = null, bool as_queued = false, CancellationToken cancellationToken = default)
     {
         using var content = new MultipartFormDataContent();
         var fileContent = new ByteArrayContent(file);
@@ -256,6 +256,7 @@ public class UsenetApi : IUsenetApi
 
         content.Add(fileContent, "file");
         content.Add(new StringContent(post_processing.ToString()), "post_processing");
+        content.Add(new StringContent(as_queued.ToString()), "as_queued");
         if (name != null)
         {
             content.Add(new StringContent(name), "name");
@@ -269,12 +270,13 @@ public class UsenetApi : IUsenetApi
     }
 
     /// <inheritdoc />
-    public async Task<Response<UsenetAddResult>> AddLinkAsync(string link, int post_processing = -1, string? name = null, string? password = null, CancellationToken cancellationToken = default)
+    public async Task<Response<UsenetAddResult>> AddLinkAsync(string link, int post_processing = -1, string? name = null, string? password = null, bool as_queued = false, CancellationToken cancellationToken = default)
     {
         var data = new List<KeyValuePair<string, string?>>
         {
             new KeyValuePair<string, string?>("link", link),
             new KeyValuePair<string, string?>("post_processing", post_processing.ToString()),
+            new KeyValuePair<string, string?>("as_queued", as_queued.ToString()),
             //new KeyValuePair<string, string?>("name", name),
             new KeyValuePair<string, string?>("password", password),
         };
