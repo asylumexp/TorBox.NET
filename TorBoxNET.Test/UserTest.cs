@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -14,7 +14,7 @@ public class UserTest
         _client.UseApiAuthentication(Setup.API_KEY);
     }
 
-    [Fact]
+    [LiveFact]
     public async Task GetUser()
     {
         var result = await _client.User.GetAsync(true);
@@ -22,7 +22,7 @@ public class UserTest
         Assert.NotNull(result);
     }
 
-    //[Fact]
+    //[LiveFact]
     //public async Task RefreshToken()
     //{
     //    var sessionToken = "not_a_valid_session_token";

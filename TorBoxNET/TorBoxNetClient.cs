@@ -1,10 +1,11 @@
-﻿namespace TorBoxNET;
+namespace TorBoxNET;
 
 public interface ITorBoxNetClient
 {
     IQueuedApi Queued { get; }
     ITorrentsApi Torrents { get; }
     IUsenetApi Usenet { get; }
+    IWebDownloadsApi WebDownloads { get; }
     IUserApi User { get; }
 
     /// <summary>
@@ -57,6 +58,7 @@ public class TorBoxNetClient : ITorBoxNetClient
     public IQueuedApi Queued { get; }
     public ITorrentsApi Torrents { get; }
     public IUsenetApi Usenet { get; }
+    public IWebDownloadsApi WebDownloads { get; }
     public IUserApi User { get; }
         
     /// <summary>
@@ -84,6 +86,7 @@ public class TorBoxNetClient : ITorBoxNetClient
         Queued = new QueuedApi(client, _store);
         Torrents = new TorrentsApi(client, _store, Queued);
         Usenet = new UsenetApi(client, _store, Queued);
+        WebDownloads = new WebDownloadsApi(client, _store, Queued);
         User = new UserApi(client, _store);
     }
 

@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Text;
 using Newtonsoft.Json;
 
@@ -190,6 +190,12 @@ internal class Requests
     where T : class, new()
     {
         return await Request<T>(Store.ApiUrl, url, requireAuthentication, RequestType.Post, data, cancellationToken);
+    }
+
+    public async Task<T> PutRequestRawAsync<T>(String url, HttpContent? data, Boolean requireAuthentication, CancellationToken cancellationToken)
+    where T : class, new()
+    {
+        return await Request<T>(Store.ApiUrl, url, requireAuthentication, RequestType.Put, data, cancellationToken);
     }
     public async Task<T> PostRequestAsync<T>(String url, IEnumerable<KeyValuePair<String, String?>>? data, Boolean requireAuthentication, CancellationToken cancellationToken)
         where T : class, new()

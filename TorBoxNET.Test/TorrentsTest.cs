@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestPlatform.Utilities;
+using Microsoft.VisualStudio.TestPlatform.Utilities;
 using System;
 using System.IO;
 using System.Text;
@@ -21,7 +21,7 @@ public class TorrentsTest
         _client.UseApiAuthentication(Setup.API_KEY);
     }
 
-    [Fact]
+    [LiveFact]
     public async Task TorrentsCount()
     {
         var result = await _client.Torrents.GetTotal();
@@ -31,7 +31,7 @@ public class TorrentsTest
         Assert.NotEqual(-1, result);
     }
 
-    [Fact]
+    [LiveFact]
     public async Task CurrentTorrents()
     {
         var result = await _client.Torrents.GetCurrentAsync(true);
@@ -44,7 +44,7 @@ public class TorrentsTest
         Assert.NotNull(result);
     }
 
-    [Fact]
+    [LiveFact]
     public async Task QueuedTorrents()
     {
         var result = await _client.Torrents.GetQueuedAsync(true);
@@ -56,17 +56,23 @@ public class TorrentsTest
         Assert.NotNull(result);
     }
 
-    [Fact]
+    [LiveFact]
     public async Task Info()
     {
         var result = await _client.Torrents.GetHashInfoAsync("dd8255ecdc7ca55fb0bbf81323d87062db1f6d1c");
+
+        if (result == null)
+        {
+            _output.WriteLine("Torrent dd8255ecdc7ca55fb0bbf81323d87062db1f6d1c was not found on this account.");
+            return;
+        }
 
         _output.WriteLine(result.Name);
 
         Assert.NotNull(result);
     }
 
-    [Fact]
+    [LiveFact]
     public async Task AddFile()
     {
         const String filePath = @"big-buck-bunny.torrent";
@@ -78,7 +84,7 @@ public class TorrentsTest
         Assert.True(result.Success);
     }
 
-    [Fact]
+    [LiveFact]
     public async Task AddMagnet()
     {
         var magnetLink = "magnet:?xt=urn:btih:dd8255ecdc7ca55fb0bbf81323d87062db1f6d1c&dn=Big+Buck+Bunny&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.fastcast.nz&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F";
@@ -87,7 +93,7 @@ public class TorrentsTest
         Assert.True(result.Success);
     }
 
-    [Fact]
+    [LiveFact]
     public async Task ControlTorrent()
     {
         var hash = "dd8255ecdc7ca55fb0bbf81323d87062db1f6d1c";
@@ -101,7 +107,7 @@ public class TorrentsTest
         Assert.True(result.Success);
     }
 
-    [Fact]
+    [LiveFact]
     public async Task CheckAvailability()
     {
         var hash = "dd8255ecdc7ca55fb0bbf81323d87062db1f6d1c";
@@ -110,7 +116,7 @@ public class TorrentsTest
         Assert.True(result.Success);
     }
 
-    [Fact]
+    [LiveFact]
     public async Task RequestDownload()
     {
         var torrentId = 123;

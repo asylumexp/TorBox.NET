@@ -1,4 +1,4 @@
-﻿namespace TorBoxNET;
+namespace TorBoxNET;
 
 public class AccessTokenExpired : Exception
 {
