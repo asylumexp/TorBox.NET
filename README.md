@@ -1,130 +1,155 @@
-# RD.NET
+# TorBox.NET
 
-Real-Debrid .NET wrapper library written in C#
+TorBox.NET is a .NET wrapper library for the [TorBox API](https://api.torbox.app/docs#/), written in C#.
 
-Supports all API calls and OAuth2 authentication.
+Forked from [rogerfar's RD.NET](https://github.com/rogerfar/RD.NET).
+
+Currently supports Torrents, Usenet, WebDL, queued downloads, and user API calls.
+
+## Installation
+
+Install the package from NuGet:
+
+```powershell
+dotnet add package TorBox.NET
+```
 
 ## Usage
 
-Create an instance of `RdNetClient` for each user you want to authenticate. If you need to support multiple users you will need to create a new instance every time you switch users.
+Create an instance of `TorBoxNetClient` for each user you want to authenticate. If you need to support multiple users, create a new instance whenever you switch users.
 
 ```csharp
-var client = new RdNetClient();
+var client = new TorBoxNetClient();
 ```
 
-When no parameters are given in the constructor the default app ID is used for open source application.
+The client follows the TorBox API closely in naming and parameters:
 
-The client follows the documentation closely in naming and parameters:
-```
-var client = new RdNetClient();
-client.UseApiAuthentication("myapikey");
+```csharp
+var client = new TorBoxNetClient();
+client.UseApiAuthentication("my-api-key");
 
-// See https://api.real-debrid.com/
-await client.Unrestrict.CheckAsync("https://www.4shared.com/mp3/BilLPtwmea/file_example_MP3_5MG.html");
+var torrents = await client.Torrents.GetCurrentAsync(skipCache: true);
+var webDownloads = await client.WebDownloads.GetCurrentAsync(skipCache: true);
 ```
 
 ## Authentication
 
-### Api Token
+### API Token
 
-Call the `UseApiAuthentication` function with the API key for the user:
+Call `UseApiAuthentication` with the user's TorBox API key:
 
 ```csharp
 client.UseApiAuthentication("user API key");
 ```
 
-Each user has its own API key, which can be found here: <https://real-debrid.com/apitoken>.
+You can find your TorBox API key in your TorBox account settings.
 
-### OAuth2 for open source applications
+## Torrents
 
-[Workflow for opensource apps](https://api.real-debrid.com/#device_auth_no_secret)
-
-This method does not require a client_id or client_secret and can be used in open source applications.
-
-Call the following function to setup OAuth2:
+Add a magnet link:
 
 ```csharp
-client.UseOAuthAuthentication();
+var result = await client.Torrents.AddMagnetAsync(
+    "magnet:?xt=urn:btih:...",
+    seeding: 1,
+    allowZip: false,
+    name: "Example torrent");
 ```
 
-To authenticate the user call:
+Add a `.torrent` file:
 
 ```csharp
-var result = await client.Authentication.GetDeviceAuthorizeRequestAsync();
+var bytes = await File.ReadAllBytesAsync("example.torrent");
+var result = await client.Torrents.AddFileAsync(bytes, seeding: 1);
 ```
 
-This will give you a URL and code to have the user verify their device.
-
-You can poll the result by doing:
+List current torrents:
 
 ```csharp
-var result = await client.Authentication.VerifyDeviceAuthentication();
+var torrents = await client.Torrents.GetCurrentAsync(skipCache: true);
 ```
 
-If the result is `NULL` the user has not authorized the device. When the user has done so a response will be given with the `ClientId` and `ClientSecret`.
-
-These tokens are now used to trade them in for authentication tokens:
+Request a download link after TorBox has cached the torrent:
 
 ```csharp
-var result = await client.Authentication.GetOAuthAuthorizationTokensAsync("ClientId", "ClientSecret");
+var download = await client.Torrents.RequestDownloadAsync(
+    torrent_id: 123,
+    file_id: 456,
+    zip: false);
 ```
 
-The `ClientId`, `ClientSecret`,  `AccessToken` and `RefreshToken` should be safely stored and are needed for future authentication.
+## Usenet
 
-To initialize the client again later with the tokens simply pass them to the `UseOAuthAuthentication` method:
+Add an NZB link:
 
 ```csharp
-client.UseOAuthAuthentication("user client_id", "user client_secret", "user access token", "user refresh token");
+var result = await client.Usenet.AddLinkAsync(
+    "https://example.com/file.nzb",
+    post_processing: 3,
+    name: "Example NZB");
 ```
 
-### OAuth2 for closed source applications
-
-[Workflow for opensource apps](https://api.real-debrid.com/#device_auth)
-
-This method is the same as above except instead of passing in the user client_id and user client_secret you pass in your own client_id and client_secret.
-
-### Three legged OAuth2 for websites
-
-[Workflow for websites or client applications](https://api.real-debrid.com/#three_legged)
-
-Start the process by calling the `GetOAuthAuthorizationUrl` method to retrieve a URL to pass to the user:
+Add an NZB file:
 
 ```csharp
-var result = client.Authentication.GetOAuthAuthorizationUrl(new Uri("https://mywebsite"), "34f98j");
+var bytes = await File.ReadAllBytesAsync("example.nzb");
+var result = await client.Usenet.AddFileAsync(bytes, post_processing: 3);
 ```
 
-Navigate the user to the resulting URL, when the user accepts, the user will be redirected to the given reirect URL with 2 query parameters: `code` and `state`.
-
-Use the `state` parameter to verify if the request is legit.
-
-Use the `code` parameter to get the authentication tokens for the user:
+Request a download link after TorBox has cached the Usenet download:
 
 ```csharp
-var result = await client.Authentication.GetOAuthAuthorizationTokensAsync("Your clientId", "Your clientSecret", "Code");
+var download = await client.Usenet.RequestDownloadAsync(
+    usenet_id: 123,
+    file_id: 0,
+    zip: false);
 ```
 
-The result will give you the `AccessToken` and `RefreshToken`.
+## WebDL
 
-To initialize the client with the tokens simply pass them to the `UseOAuthAuthentication` method:
+Create a WebDL from a direct download or supported hoster link:
 
 ```csharp
-client.UseOAuthAuthentication("your client_id", "your client_secret", "user access token", "user refresh token");
+var result = await client.WebDownloads.AddLinkAsync(
+    "https://example.com/file.zip",
+    name: "file.zip",
+    as_queued: false,
+    add_only_if_cached: false);
 ```
 
-## Refreshing the access token
-
-When the access token is expired you will retrieve an `AccessTokenExpired` exception. Use the refresh token to renew the access token and store the access token:
+List current WebDL items:
 
 ```csharp
-var newCredentials = await client.Authentication.RefreshTokenAsync();
+var webDownloads = await client.WebDownloads.GetCurrentAsync(skipCache: true);
 ```
 
-All tokens are cached in the client when refreshing, but it's your responsibility to retry the request with the new access token.
+Request a generated download link after TorBox has cached the WebDL:
 
-## Unit tests
+```csharp
+var download = await client.WebDownloads.RequestDownloadAsync(
+    web_id: 123,
+    file_id: 0,
+    zip: false);
+```
 
-The unit tests are not designed to be ran all at once, they are used to act as a test client.
+Check supported WebDL hosters:
 
-Create a file `setup.txt` and put your API token in there.
+```csharp
+var hosters = await client.WebDownloads.GetHostersAsync();
+```
 
-Some functions will need replacement ID's to work properly.
+## Queued Downloads
+
+Queued downloads can be queried directly:
+
+```csharp
+var queuedTorrents = await client.Queued.GetQueuedAsync(type: "torrent");
+var queuedUsenet = await client.Queued.GetQueuedAsync(type: "usenet");
+var queuedWebDl = await client.Queued.GetQueuedAsync(type: "webdl");
+```
+
+## Unit Tests
+
+To run tests, create `TorBoxNET.Test/secret.json`. An example file exists at `TorBoxNET.Test/secret.json.example`.
+
+You will need a link from a supported provider to run WebDL tests.
