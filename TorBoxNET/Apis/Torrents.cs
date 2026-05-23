@@ -16,13 +16,16 @@ public interface ITorrentsApi
     /// <param name="skipCache">
     /// Whether to bypass the cache and fetch fresh data from the server. Defaults to false.
     /// </param>
+    /// <param name="limit">
+    /// Maximum number of torrents to request from the API. Defaults to 1000.
+    /// </param>
     /// <param name="cancellationToken">
     /// A token to cancel the task if necessary.
     /// </param>
     /// <returns>
     /// The total number of torrents, or -1 if the request fails.
     /// </returns>
-    Task<Int64> GetTotal(bool skipCache = false, CancellationToken cancellationToken = default);
+    Task<Int64> GetTotal(bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Fetches the list of active torrents for the user.
@@ -30,13 +33,16 @@ public interface ITorrentsApi
     /// <param name="skipCache">
     /// Whether to bypass the cache and retrieve fresh data from the server. Defaults to false.
     /// </param>
+    /// <param name="limit">
+    /// Maximum number of torrents to request from the API. Defaults to 1000.
+    /// </param>
     /// <param name="cancellationToken">
     /// A token to cancel the task if necessary.
     /// </param>
     /// <returns>
     /// A list of torrents if the request succeeds, otherwise null.
     /// </returns>
-    Task<List<TorrentInfoResult>?> GetCurrentAsync(bool skipCache = false, CancellationToken cancellationToken = default);
+    Task<List<TorrentInfoResult>?> GetCurrentAsync(bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the list of user's queued torrents.
@@ -56,13 +62,16 @@ public interface ITorrentsApi
     /// <param name="skipCache">
     /// Whether to bypass the cache and retrieve fresh data from the server. Defaults to false.
     /// </param>
+    /// <param name="limit">
+    /// Maximum number of torrents to request from the API. Defaults to 1000.
+    /// </param>
     /// <param name="cancellationToken">
     /// A token to cancel the task if necessary.
     /// </param>
     /// <returns>
     /// Information about the torrent if found, otherwise null.
     /// </returns>
-    Task<TorrentInfoResult?> GetIdInfoAsync(int id, bool skipCache = false, CancellationToken cancellationToken = default);
+    Task<TorrentInfoResult?> GetIdInfoAsync(int id, bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves detailed information about a specific torrent by its hash.
@@ -72,13 +81,16 @@ public interface ITorrentsApi
     /// <param name="skipCache">
     /// Whether to bypass the cache and retrieve fresh data from the server. Defaults to false.
     /// </param>
+    /// <param name="limit">
+    /// Maximum number of torrents to request from the API. Defaults to 1000.
+    /// </param>
     /// <param name="cancellationToken">
     /// A token to cancel the task if necessary.
     /// </param>
     /// <returns>
     /// Information about the torrent if found, otherwise null.
     /// </returns>
-    Task<TorrentInfoResult?> GetHashInfoAsync(string hash, bool skipCache = false, CancellationToken cancellationToken = default);
+    Task<TorrentInfoResult?> GetHashInfoAsync(string hash, bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Adds a torrent file to the torrent client.
@@ -174,9 +186,9 @@ public class TorrentsApi : ITorrentsApi
     }
 
     /// <inheritdoc />
-    public async Task<Int64> GetTotal(bool skipCache = false, CancellationToken cancellationToken = default)
+    public async Task<Int64> GetTotal(bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default)
     {
-        var res = await GetCurrentAsync(skipCache, cancellationToken);
+        var res = await GetCurrentAsync(skipCache, limit, cancellationToken);
 
         if (res == null)
         {
@@ -187,9 +199,13 @@ public class TorrentsApi : ITorrentsApi
     }
 
     /// <inheritdoc />
-    public async Task<List<TorrentInfoResult>?> GetCurrentAsync(bool skipCache = false, CancellationToken cancellationToken = default)
+    public async Task<List<TorrentInfoResult>?> GetCurrentAsync(bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default)
     {
-        var list = await _requests.GetRequestAsync($"torrents/mylist?bypass_cache={skipCache}", true, cancellationToken);
+        var parameters = HttpUtility.ParseQueryString(string.Empty);
+        parameters["bypass_cache"] = skipCache.ToString();
+        parameters["limit"] = limit.ToString();
+
+        var list = await _requests.GetRequestAsync($"torrents/mylist?{parameters}", true, cancellationToken);
 
         if (list == null)
         {
@@ -241,9 +257,14 @@ public class TorrentsApi : ITorrentsApi
 
 
     /// <inheritdoc />
-    public async Task<TorrentInfoResult?> GetIdInfoAsync(int id, bool skipCache = false, CancellationToken cancellationToken = default)
+    public async Task<TorrentInfoResult?> GetIdInfoAsync(int id, bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default)
     {
-        var currentTorrent = await _requests.GetRequestAsync($"torrents/mylist?id={id}&bypass_cache={skipCache}", true, cancellationToken);
+        var parameters = HttpUtility.ParseQueryString(string.Empty);
+        parameters["id"] = id.ToString();
+        parameters["bypass_cache"] = skipCache.ToString();
+        parameters["limit"] = limit.ToString();
+
+        var currentTorrent = await _requests.GetRequestAsync($"torrents/mylist?{parameters}", true, cancellationToken);
 
         if (currentTorrent != null)
         {
@@ -265,9 +286,9 @@ public class TorrentsApi : ITorrentsApi
     }
 
     /// <inheritdoc />
-    public async Task<TorrentInfoResult?> GetHashInfoAsync(string hash, bool skipCache = false, CancellationToken cancellationToken = default)
+    public async Task<TorrentInfoResult?> GetHashInfoAsync(string hash, bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default)
     {
-        var currentTorrents = await GetCurrentAsync(skipCache, cancellationToken);
+        var currentTorrents = await GetCurrentAsync(skipCache, limit, cancellationToken);
 
         if (currentTorrents != null)
         {
@@ -341,7 +362,7 @@ public class TorrentsApi : ITorrentsApi
     /// <inheritdoc />
     public async Task<Response> ControlAsync(string hash, string action, CancellationToken cancellationToken = default)
     {
-        var info = await GetHashInfoAsync(hash, skipCache: true, cancellationToken);
+        var info = await GetHashInfoAsync(hash, skipCache: true, cancellationToken: cancellationToken);
         var data = new
         {
             torrent_id = info!.Id,

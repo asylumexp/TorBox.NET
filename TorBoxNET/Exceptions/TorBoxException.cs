@@ -3,7 +3,7 @@ namespace TorBoxNET;
 public class TorBoxException : Exception
 {
     public TorBoxException(String? error, String? detail)
-        : base(detail ?? error)
+        : base(FormatMessage(error, detail))
     {
         ErrorDetail = detail;
         Error = error ?? "NULL_DETAIL_ERROR";
@@ -11,6 +11,23 @@ public class TorBoxException : Exception
 
     public String Error { get; }
     public String? ErrorDetail { get; }
+
+    private static String? FormatMessage(String? error, String? detail)
+    {
+        if (String.IsNullOrWhiteSpace(error))
+        {
+            return detail;
+        }
+
+        if (String.IsNullOrWhiteSpace(detail) || detail!.Equals(error, StringComparison.OrdinalIgnoreCase))
+        {
+            return error;
+        }
+
+        return detail!.StartsWith($"{error}:", StringComparison.OrdinalIgnoreCase)
+            ? detail
+            : $"{error}: {detail}";
+    }
 
     public static String? GetMessage(String? error)
     {

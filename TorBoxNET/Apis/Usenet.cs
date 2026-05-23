@@ -12,13 +12,16 @@ public interface IUsenetApi
     /// <param name="skipCache">
     /// Whether to bypass the cache and retrieve fresh data from the server. Defaults to false.
     /// </param>
+    /// <param name="limit">
+    /// Maximum number of usenet downloads to request from the API. Defaults to 1000.
+    /// </param>
     /// <param name="cancellationToken">
     /// A token to cancel the task if necessary.
     /// </param>
     /// <returns>
     /// A list of usenet downloads if the request succeeds, otherwise null.
     /// </returns>
-    Task<List<UsenetInfoResult>?> GetCurrentAsync(bool skipCache = false, CancellationToken cancellationToken = default);
+    Task<List<UsenetInfoResult>?> GetCurrentAsync(bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Fetches the list of active usenet downloads for the user.
@@ -41,13 +44,16 @@ public interface IUsenetApi
     /// <param name="skipCache">
     /// Whether to bypass the cache and retrieve fresh data from the server. Defaults to false.
     /// </param>
+    /// <param name="limit">
+    /// Maximum number of usenet downloads to request from the API. Defaults to 1000.
+    /// </param>
     /// <param name="cancellationToken">
     /// A token to cancel the task if necessary.
     /// </param>
     /// <returns>
     /// Information about the download if found, otherwise null.
     /// </returns>
-    Task<UsenetInfoResult?> GetHashInfoAsync(string hash, bool skipCache = false, CancellationToken cancellationToken = default);
+    Task<UsenetInfoResult?> GetHashInfoAsync(string hash, bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves detailed information about a usenet download by its id.
@@ -56,13 +62,16 @@ public interface IUsenetApi
     /// <param name="skipCache">
     /// Whether to bypass the cache and retrieve fresh data from the server. Defaults to false.
     /// </param>
+    /// <param name="limit">
+    /// Maximum number of usenet downloads to request from the API. Defaults to 1000.
+    /// </param>
     /// <param name="cancellationToken">
     /// A token to cancel the task if necessary.
     /// </param>
     /// <returns>
     /// Information about the download if found, otherwise null.
     /// </returns>
-    Task<UsenetInfoResult?> GetIdInfoAsync(int id, bool skipCache = false, CancellationToken cancellationToken = default);
+    Task<UsenetInfoResult?> GetIdInfoAsync(int id, bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Adds a nzb file to the remote client.
@@ -171,10 +180,13 @@ public class UsenetApi : IUsenetApi
     }
 
     /// <inheritdoc />
-    public async Task<List<UsenetInfoResult>?> GetCurrentAsync(bool skipCache = false, CancellationToken cancellationToken = default)
+    public async Task<List<UsenetInfoResult>?> GetCurrentAsync(bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default)
     {
+        var parameters = HttpUtility.ParseQueryString(string.Empty);
+        parameters["bypass_cache"] = skipCache.ToString();
+        parameters["limit"] = limit.ToString();
 
-        var list = await _requests.GetRequestAsync($"usenet/mylist?bypass_cache={skipCache}", true, cancellationToken);
+        var list = await _requests.GetRequestAsync($"usenet/mylist?{parameters}", true, cancellationToken);
 
         if (list == null)
         {
@@ -222,9 +234,9 @@ public class UsenetApi : IUsenetApi
 
 
     /// <inheritdoc />
-    public async Task<UsenetInfoResult?> GetHashInfoAsync(string hash, bool skipCache = false, CancellationToken cancellationToken = default)
+    public async Task<UsenetInfoResult?> GetHashInfoAsync(string hash, bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default)
     {
-        var currentDownloads = await GetCurrentAsync(skipCache, cancellationToken);
+        var currentDownloads = await GetCurrentAsync(skipCache, limit, cancellationToken);
 
         if (currentDownloads == null)
         {
@@ -235,9 +247,14 @@ public class UsenetApi : IUsenetApi
     }
 
     /// <inheritdoc />
-    public async Task<UsenetInfoResult?> GetIdInfoAsync(int id, bool skipCache = false, CancellationToken cancellationToken = default)
+    public async Task<UsenetInfoResult?> GetIdInfoAsync(int id, bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default)
     {
-        var currentDownload = await _requests.GetRequestAsync<Response<UsenetInfoResult?>>($"usenet/mylist?bypass_cache={skipCache}", true, cancellationToken);
+        var parameters = HttpUtility.ParseQueryString(string.Empty);
+        parameters["id"] = id.ToString();
+        parameters["bypass_cache"] = skipCache.ToString();
+        parameters["limit"] = limit.ToString();
+
+        var currentDownload = await _requests.GetRequestAsync<Response<UsenetInfoResult?>>($"usenet/mylist?{parameters}", true, cancellationToken);
 
         return currentDownload?.Data;
     }
@@ -287,7 +304,7 @@ public class UsenetApi : IUsenetApi
     /// <inheritdoc />
     public async Task<Response> ControlAsync(string hash, string action, bool all = false,  CancellationToken cancellationToken = default)
     {
-        var info = await GetHashInfoAsync(hash, skipCache: true, cancellationToken);
+        var info = await GetHashInfoAsync(hash, skipCache: true, cancellationToken: cancellationToken);
 
         var data = new
         {

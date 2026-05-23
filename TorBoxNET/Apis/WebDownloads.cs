@@ -10,9 +10,9 @@ public interface IWebDownloadsApi
 
     Task<List<WebDownloadInfoResult>?> GetQueuedAsync(bool skipCache = false, CancellationToken cancellationToken = default);
 
-    Task<WebDownloadInfoResult?> GetIdInfoAsync(int id, bool skipCache = false, CancellationToken cancellationToken = default);
+    Task<WebDownloadInfoResult?> GetIdInfoAsync(int id, bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default);
 
-    Task<WebDownloadInfoResult?> GetHashInfoAsync(string hash, bool skipCache = false, CancellationToken cancellationToken = default);
+    Task<WebDownloadInfoResult?> GetHashInfoAsync(string hash, bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default);
 
     Task<Response<WebDownloadAddResult>> AddLinkAsync(string link, string? password = null, string? name = null, bool as_queued = false, bool add_only_if_cached = false, CancellationToken cancellationToken = default);
 
@@ -73,20 +73,21 @@ public class WebDownloadsApi : IWebDownloadsApi
         return queuedDownloads.Select(MapQueuedDownloadToWebDownloadInfo).ToList();
     }
 
-    public async Task<WebDownloadInfoResult?> GetIdInfoAsync(int id, bool skipCache = false, CancellationToken cancellationToken = default)
+    public async Task<WebDownloadInfoResult?> GetIdInfoAsync(int id, bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default)
     {
         var parameters = HttpUtility.ParseQueryString(string.Empty);
         parameters["id"] = id.ToString();
         parameters["bypass_cache"] = skipCache.ToString();
+        parameters["limit"] = limit.ToString();
 
         var webDownload = await _requests.GetRequestAsync<Response<WebDownloadInfoResult?>>($"webdl/mylist?{parameters}", true, cancellationToken);
 
         return webDownload?.Data;
     }
 
-    public async Task<WebDownloadInfoResult?> GetHashInfoAsync(string hash, bool skipCache = false, CancellationToken cancellationToken = default)
+    public async Task<WebDownloadInfoResult?> GetHashInfoAsync(string hash, bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default)
     {
-        var currentDownloads = await GetCurrentAsync(skipCache, cancellationToken: cancellationToken);
+        var currentDownloads = await GetCurrentAsync(skipCache, limit: limit, cancellationToken: cancellationToken);
 
         if (currentDownloads != null)
         {
@@ -124,7 +125,7 @@ public class WebDownloadsApi : IWebDownloadsApi
 
     public async Task<Response> ControlAsync(string hash, string action, bool all = false, CancellationToken cancellationToken = default)
     {
-        var info = await GetHashInfoAsync(hash, skipCache: true, cancellationToken);
+        var info = await GetHashInfoAsync(hash, skipCache: true, cancellationToken: cancellationToken);
         return await ControlByIdAsync(info?.Id, action, all, cancellationToken);
     }
 

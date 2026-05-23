@@ -86,7 +86,7 @@ public class WebDownloadsApiTest
     {
         using var harness = new HttpHarness(request =>
         {
-            Assert.Equal("https://api.torbox.app/v1/api/webdl/mylist?id=42&bypass_cache=True", request.RequestUri!.ToString());
+            Assert.Equal("https://api.torbox.app/v1/api/webdl/mylist?id=42&bypass_cache=True&limit=1000", request.RequestUri!.ToString());
             return JsonResponse("""{"success":true,"data":{"id":42,"hash":"abc","name":"o4hij09fmd3g"}}""");
         });
 
@@ -96,6 +96,22 @@ public class WebDownloadsApiTest
 
         Assert.Equal(42, result!.Id);
         Assert.Equal("abc", result.Hash);
+    }
+
+    [Fact]
+    public async Task GetIdInfoAsync_UsesCustomLimit()
+    {
+        using var harness = new HttpHarness(request =>
+        {
+            Assert.Equal("https://api.torbox.app/v1/api/webdl/mylist?id=42&bypass_cache=True&limit=10000", request.RequestUri!.ToString());
+            return JsonResponse("""{"success":true,"data":{"id":42,"hash":"abc","name":"o4hij09fmd3g"}}""");
+        });
+
+        var client = CreateClient(harness);
+
+        var result = await client.WebDownloads.GetIdInfoAsync(42, skipCache: true, limit: 10000);
+
+        Assert.Equal(42, result!.Id);
     }
 
     [Fact]
