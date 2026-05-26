@@ -232,9 +232,59 @@ public class WebDownloadsApiTest
         Assert.Equal("INVALID_LINK", exception.Error);
     }
 
-    private static TorBoxNetClient CreateClient(HttpHarness harness)
+    [Fact]
+    public async Task RateLimitResponses_ThrowRateLimitTorBoxException()
     {
-        var client = new TorBoxNetClient(httpClient: harness.Client, retryCount: 0);
+        using var harness = new HttpHarness(_ => new HttpResponseMessage((HttpStatusCode)429)
+        {
+            Content = new StringContent("""{"detail":"60 per 1 hour"}""")
+        });
+
+        var client = CreateClient(harness, retryCount: 3);
+
+        var exception = await Assert.ThrowsAsync<TorBoxException>(() => client.WebDownloads.AddLinkAsync(TestWebDownloadUrl));
+
+        Assert.Equal("RATE_LIMIT", exception.Error);
+        Assert.Equal("60 per 1 hour", exception.ErrorDetail);
+    }
+
+    [Fact]
+    public async Task SuccessfulHttpErrorPayload_ThrowsTorBoxException()
+    {
+        using var harness = new HttpHarness(_ => JsonResponse("""{"success":false,"error":"DATABASE_ERROR","detail":"temporary store failure"}"""));
+
+        var client = CreateClient(harness);
+
+        var exception = await Assert.ThrowsAsync<TorBoxException>(() => client.WebDownloads.AddLinkAsync(TestWebDownloadUrl));
+
+        Assert.Equal("DATABASE_ERROR", exception.Error);
+    }
+
+    [Fact]
+    public async Task TransientApiErrors_AreRetried()
+    {
+        var requests = 0;
+        using var harness = new HttpHarness(_ =>
+        {
+            requests++;
+
+            return requests == 1
+                ? JsonResponse("""{"success":false,"error":"DATABASE_ERROR","detail":"temporary store failure"}""")
+                : JsonResponse("""{"success":true,"data":{"hash":"abc","webdownload_id":42}}""");
+        });
+
+        var client = CreateClient(harness, retryCount: 1);
+
+        var result = await client.WebDownloads.AddLinkAsync(TestWebDownloadUrl);
+
+        Assert.True(result.Success);
+        Assert.Equal(2, requests);
+        Assert.Equal(42, result.Data!.WebDownloadId);
+    }
+
+    private static TorBoxNetClient CreateClient(HttpHarness harness, int retryCount = 0)
+    {
+        var client = new TorBoxNetClient(httpClient: harness.Client, retryCount: retryCount);
         client.UseApiAuthentication("token-123");
         return client;
     }

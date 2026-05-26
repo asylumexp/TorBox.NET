@@ -52,6 +52,7 @@ public class TorBoxException : Exception
             "TOO_MANY_OPTIONS" => "Client sent too many options. Usually this has to do with the API requiring only 1 option but the client sent more than the required.",
             "BOZO_TORRENT" => "The torrent sent is not a valid torrent.",
             "NO_SERVERS_AVAILABLE_ERROR" => "There are no download servers available to handle this request. This should never happen. If you receive this error, please contact us at contact@torbox.app.",
+            "RATE_LIMIT" => "The API rate limit was exceeded. Wait for the limit window to reset before retrying.",
             "MONTHLY_LIMIT" => "User has hit the maximum monthly limit. It is recommended user upgrade their account to be able to download more.",
             "COOLDOWN_LIMIT" => "User is on download cooldown. It is recommended user upgrade their account to bypass this restriction.",
             "ACTIVE_LIMIT" => "User has hit their max active download limit. It is recommended user upgrade their account or purchase addons to bypass this restriction.",

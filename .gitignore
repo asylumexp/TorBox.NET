@@ -6,3 +6,4 @@ publish.bat
 RDNET.sln.DotSettings.user
 TorBoxNET.Test/secret.txt
 TorBoxNET.Test/secret.json
+.DS_Store

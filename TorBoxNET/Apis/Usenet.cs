@@ -164,6 +164,11 @@ public interface IUsenetApi
     /// A response containing the download link.
     /// </returns>
     Task<Response<String>> RequestDownloadAsync(int usenet_id, int? file_id, bool zip = false, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Requests a download link for a specific usenet download wholly or file.
+    /// </summary>
+    Task<Response<String>> RequestDownloadAsync(int usenet_id, int? file_id, bool zip, string? user_ip, bool redirect, bool append_name, CancellationToken cancellationToken = default);
 }
 
 public class UsenetApi : IUsenetApi
@@ -326,13 +331,25 @@ public class UsenetApi : IUsenetApi
     /// <inheritdoc />
     public async Task<Response<String>> RequestDownloadAsync(int usenet_id, int? file_id, bool zip = false, CancellationToken cancellationToken = default)
     {
+        return await RequestDownloadAsync(usenet_id, file_id, zip, null, false, false, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<Response<String>> RequestDownloadAsync(int usenet_id, int? file_id, bool zip, string? user_ip, bool redirect, bool append_name, CancellationToken cancellationToken = default)
+    {
         var parameters = HttpUtility.ParseQueryString(string.Empty);
         parameters["token"] = _store.BearerToken;
         parameters["usenet_id"] = usenet_id.ToString();
-        parameters["file_id"] = file_id.ToString() ?? string.Empty;
-        parameters["zip"] = zip.ToString();
+        parameters["file_id"] = file_id?.ToString() ?? "0";
+        parameters["zip_link"] = zip.ToString();
+        parameters["redirect"] = redirect.ToString();
+        parameters["append_name"] = append_name.ToString();
+
+        if (!String.IsNullOrWhiteSpace(user_ip))
+        {
+            parameters["user_ip"] = user_ip;
+        }
 
         return await _requests.GetRequestAsync<Response<String>>($"usenet/requestdl?{parameters}", true, cancellationToken);
-
     }
 }

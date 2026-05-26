@@ -110,6 +110,11 @@ public interface ITorrentsApi
     Task<Response<TorrentAddResult>> AddFileAsync(Byte[] file, int seeding = 1, bool allowZip = false, string? name = null, bool as_queued = false, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Adds a torrent file to the torrent client.
+    /// </summary>
+    Task<Response<TorrentAddResult>> AddFileAsync(Byte[] file, int seeding, bool allowZip, string? name, bool as_queued, bool add_only_if_cached, bool async_create, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Adds a magnet link to the torrent client.
     /// </summary>
     /// <param name="magnet">The magnet link to be added.</param>
@@ -125,6 +130,11 @@ public interface ITorrentsApi
     /// The response containing information about the added torrent.
     /// </returns>
     Task<Response<TorrentAddResult>> AddMagnetAsync(string magnet, int seeding = 1, bool allowZip = false, string? name = null, bool as_queued = false, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Adds a magnet link to the torrent client.
+    /// </summary>
+    Task<Response<TorrentAddResult>> AddMagnetAsync(string magnet, int seeding, bool allowZip, string? name, bool as_queued, bool add_only_if_cached, bool async_create, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Modifies the state of a torrent (e.g., pause, resume, reannounce, delete).
@@ -169,6 +179,11 @@ public interface ITorrentsApi
     /// A response containing the download link.
     /// </returns>
     Task<Response<string>> RequestDownloadAsync(int torrent_id, int? file_id, bool zip = false, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Requests a download link for a specific torrent or file.
+    /// </summary>
+    Task<Response<string>> RequestDownloadAsync(int torrent_id, int? file_id, bool zip, string? user_ip, bool redirect, bool append_name, CancellationToken cancellationToken = default);
 }
 
 /// <inheritdoc />
@@ -275,11 +290,11 @@ public class TorrentsApi : ITorrentsApi
             }
         }
 
-        var queuedTorrent = await GetQueuedAsync(skipCache, cancellationToken);
+        var queuedTorrent = await _queued.GetQueuedAsync(skipCache, "torrent", id, 0, limit, cancellationToken);
 
-        if (queuedTorrent != null)
+        if (queuedTorrent is { Count: > 0 })
         {
-            return queuedTorrent[0];
+            return MapQueuedTorrentToTorrentInfo(queuedTorrent[0]);
         }
 
         return null;
@@ -294,7 +309,7 @@ public class TorrentsApi : ITorrentsApi
         {
             foreach (var torrent in currentTorrents)
             {
-                if (torrent.Hash == hash)
+                if (torrent.Hash.Equals(hash, StringComparison.OrdinalIgnoreCase))
                 {
                     return torrent;
                 }
@@ -307,7 +322,7 @@ public class TorrentsApi : ITorrentsApi
         {
             foreach (var torrent in queuedTorrents)
             {
-                if (torrent.Hash == hash)
+                if (torrent.Hash.Equals(hash, StringComparison.OrdinalIgnoreCase))
                 {
                     return torrent;
                 }
@@ -320,54 +335,82 @@ public class TorrentsApi : ITorrentsApi
     /// <inheritdoc />
     public async Task<Response<TorrentAddResult>> AddFileAsync(Byte[] file, int seeding = 1, bool allowZip = false, string? name = null, bool as_queued = false, CancellationToken cancellationToken = default)
     {
+        return await AddFileAsync(file, seeding, allowZip, name, as_queued, false, false, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<Response<TorrentAddResult>> AddFileAsync(Byte[] file, int seeding, bool allowZip, string? name, bool as_queued, bool add_only_if_cached, bool async_create, CancellationToken cancellationToken = default)
+    {
         using (var content = new MultipartFormDataContent())
         {
             var fileContent = new ByteArrayContent(file);
-            fileContent.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("form-data")
-            {
-                Name = "file",
-                FileName = "torrent.torrent"
-            };
             fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-bittorrent");
 
-            content.Add(fileContent);
+            content.Add(fileContent, "file", "torrent.torrent");
             content.Add(new StringContent(seeding.ToString()), "seed");
             content.Add(new StringContent(allowZip.ToString()), "allow_zip");
             content.Add(new StringContent(as_queued.ToString()), "as_queued");
+            content.Add(new StringContent(add_only_if_cached.ToString()), "add_only_if_cached");
 
             if (name != null)
             {
                 content.Add(new StringContent(name), "name");
             }
 
-            return await _requests.PostRequestMultipartAsync<Response<TorrentAddResult>>("torrents/createtorrent", content, true, cancellationToken);
+            var endpoint = async_create ? "torrents/asynccreatetorrent" : "torrents/createtorrent";
+
+            return await _requests.PostRequestMultipartAsync<Response<TorrentAddResult>>(endpoint, content, true, cancellationToken);
         }
     }
 
     /// <inheritdoc />
     public async Task<Response<TorrentAddResult>> AddMagnetAsync(string magnet, int seeding = 1, bool allowZip = false, string? name = null, bool as_queued = false, CancellationToken cancellationToken = default)
     {
-        var data = new List<KeyValuePair<string, string?>>
-        {
-            new KeyValuePair<string, string?>("magnet", magnet),
-            new KeyValuePair<string, string?>("seed", seeding.ToString()),
-            new KeyValuePair<string, string?>("allow_zip", allowZip.ToString()),
-            new KeyValuePair<string, string?>("as_queued", as_queued.ToString()),
-            new KeyValuePair<string, string?>("name", name)
-        };
+        return await AddMagnetAsync(magnet, seeding, allowZip, name, as_queued, false, false, cancellationToken);
+    }
 
-        return await _requests.PostRequestAsync<Response<TorrentAddResult>>("torrents/createtorrent", data, true, cancellationToken);
+    /// <inheritdoc />
+    public async Task<Response<TorrentAddResult>> AddMagnetAsync(string magnet, int seeding, bool allowZip, string? name, bool as_queued, bool add_only_if_cached, bool async_create, CancellationToken cancellationToken = default)
+    {
+        using var content = new MultipartFormDataContent();
+
+        content.Add(new StringContent(magnet), "magnet");
+        content.Add(new StringContent(seeding.ToString()), "seed");
+        content.Add(new StringContent(allowZip.ToString()), "allow_zip");
+        content.Add(new StringContent(as_queued.ToString()), "as_queued");
+        content.Add(new StringContent(add_only_if_cached.ToString()), "add_only_if_cached");
+
+        if (name != null)
+        {
+            content.Add(new StringContent(name), "name");
+        }
+
+        var endpoint = async_create ? "torrents/asynccreatetorrent" : "torrents/createtorrent";
+
+        return await _requests.PostRequestMultipartAsync<Response<TorrentAddResult>>(endpoint, content, true, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<Response> ControlAsync(string hash, string action, CancellationToken cancellationToken = default)
     {
         var info = await GetHashInfoAsync(hash, skipCache: true, cancellationToken: cancellationToken);
-        var data = new
+        if (info == null)
         {
-            torrent_id = info!.Id,
-            operation = action
-        };
+            throw new TorBoxException("ITEM_NOT_FOUND", $"Torrent with hash {hash} was not found.");
+        }
+
+        Object data = info.DownloadState == "queued"
+            ? new
+            {
+                queued_id = (Int32?)info.Id,
+                operation = action
+            }
+            : new
+            {
+                torrent_id = (Int32?)info.Id,
+                operation = action
+            };
+
         var jsonContent = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
         string endpoint = info.DownloadState == "queued" ? "torrents/controlqueued" : "torrents/controltorrent";
         return await _requests.PostRequestRawAsync<Response>(endpoint, jsonContent, true, cancellationToken);
@@ -376,17 +419,35 @@ public class TorrentsApi : ITorrentsApi
     /// <inheritdoc />
     public async Task<Response<List<AvailableTorrent?>>> GetAvailabilityAsync(string hash, bool listFiles = false, CancellationToken cancellationToken = default)
     {
-        return await _requests.GetRequestAsync<Response<List<AvailableTorrent?>>>($"torrents/checkcached?hash={hash}&format=list&list_files={listFiles}", true, cancellationToken);
+        var parameters = HttpUtility.ParseQueryString(string.Empty);
+        parameters["hash"] = hash;
+        parameters["format"] = "list";
+        parameters["list_files"] = listFiles.ToString();
+
+        return await _requests.GetRequestAsync<Response<List<AvailableTorrent?>>>($"torrents/checkcached?{parameters}", true, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<Response<string>> RequestDownloadAsync(int torrent_id, int? file_id, bool zip = false, CancellationToken cancellationToken = default)
     {
+        return await RequestDownloadAsync(torrent_id, file_id, zip, null, false, false, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<Response<string>> RequestDownloadAsync(int torrent_id, int? file_id, bool zip, string? user_ip, bool redirect, bool append_name, CancellationToken cancellationToken = default)
+    {
         var parameters = HttpUtility.ParseQueryString(string.Empty);
         parameters["token"] = _store.BearerToken;
         parameters["torrent_id"] = torrent_id.ToString();
-        parameters["file_id"] = file_id.ToString();
+        parameters["file_id"] = file_id?.ToString() ?? "0";
         parameters["zip_link"] = zip.ToString();
+        parameters["redirect"] = redirect.ToString();
+        parameters["append_name"] = append_name.ToString();
+
+        if (!String.IsNullOrWhiteSpace(user_ip))
+        {
+            parameters["user_ip"] = user_ip;
+        }
 
         return await _requests.GetRequestAsync<Response<String>>($"torrents/requestdl?{parameters}", true, cancellationToken);
     }

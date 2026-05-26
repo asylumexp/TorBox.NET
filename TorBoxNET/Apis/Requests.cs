@@ -62,6 +62,11 @@ internal class Requests
                     text = null;
                 }
 
+                if (response.StatusCode == (HttpStatusCode)429)
+                {
+                    throw ParseTorBoxException(text) ?? new TorBoxException("RATE_LIMIT", text);
+                }
+
                 if (!response.IsSuccessStatusCode)
                 {
                     var torBoxException = ParseTorBoxException(text);
@@ -76,6 +81,13 @@ internal class Requests
                     }
                 }
 
+                var apiException = ParseTorBoxException(text);
+
+                if (apiException != null)
+                {
+                    throw apiException;
+                }
+
                 if (headerOutput != null)
                 {
                     response.Headers.TryGetValues(headerOutput, out var headerValues);
@@ -86,6 +98,12 @@ internal class Requests
                 }
 
                 return (text, null);
+            }
+            catch (TorBoxException ex) when (ShouldRetry(ex, retryCount))
+            {
+                retryCount++;
+
+                await DelayBeforeRetry(retryCount, cancellationToken);
             }
             catch (TorBoxException)
             {
@@ -100,7 +118,7 @@ internal class Requests
 
                 retryCount++;
 
-                await Task.Delay(1000 * retryCount, cancellationToken);
+                await DelayBeforeRetry(retryCount, cancellationToken);
             }
         }
     }
@@ -247,16 +265,58 @@ internal class Requests
 
             var requestError = JsonConvert.DeserializeObject<Response>(text);
 
-            if (requestError?.Error != null)
+            var detail = requestError?.Detail;
+
+            if (IsRateLimitDetail(detail))
             {
-                return new TorBoxException(requestError.Error, requestError.Detail);
+                return new TorBoxException("RATE_LIMIT", detail);
+            }
+
+            if (requestError?.Error != null || requestError?.Success == false)
+            {
+                return new TorBoxException(requestError.Error ?? "UNKNOWN_ERROR", requestError.Detail);
             }
 
             return null;
         }
         catch
         {
-            return null;
+            return IsRateLimitDetail(text)
+                ? new TorBoxException("RATE_LIMIT", text)
+                : null;
         }
+    }
+
+    private static Boolean IsRateLimitDetail(String? detail)
+    {
+        if (String.IsNullOrWhiteSpace(detail))
+        {
+            return false;
+        }
+
+        return detail!.IndexOf("rate limit", StringComparison.OrdinalIgnoreCase) >= 0
+               || detail.IndexOf("per 1 hour", StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    private Boolean ShouldRetry(TorBoxException exception, Int32 retryCount)
+    {
+        return retryCount < _store.RetryCount && IsTransientTorBoxError(exception.Error);
+    }
+
+    private static Boolean IsTransientTorBoxError(String error)
+    {
+        return error.Equals("DATABASE_ERROR", StringComparison.OrdinalIgnoreCase)
+               || error.Equals("DOWNLOAD_SERVER_ERROR", StringComparison.OrdinalIgnoreCase)
+               || error.Equals("UNKNOWN_ERROR", StringComparison.OrdinalIgnoreCase)
+               || error.Equals("NO_SERVERS_AVAILABLE_ERROR", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task DelayBeforeRetry(Int32 retryCount, CancellationToken cancellationToken)
+    {
+        var configuredRetryLimit = _store.RetryCount <= 0 ? 1 : _store.RetryCount;
+        var boundedRetryCount = Math.Min(retryCount, configuredRetryLimit);
+        var delayMs = Math.Min(30000, 1000 * (Int32)Math.Pow(2, boundedRetryCount - 1));
+
+        await Task.Delay(delayMs, cancellationToken);
     }
 }
