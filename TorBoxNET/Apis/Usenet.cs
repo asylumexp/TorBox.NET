@@ -188,7 +188,7 @@ public class UsenetApi : IUsenetApi
     public async Task<List<UsenetInfoResult>?> GetCurrentAsync(bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default)
     {
         var parameters = HttpUtility.ParseQueryString(string.Empty);
-        parameters["bypass_cache"] = skipCache.ToString();
+        parameters["bypass_cache"] = skipCache.ToString().ToLowerInvariant();
         parameters["limit"] = limit.ToString();
 
         var list = await _requests.GetRequestAsync($"usenet/mylist?{parameters}", true, cancellationToken);
@@ -256,7 +256,7 @@ public class UsenetApi : IUsenetApi
     {
         var parameters = HttpUtility.ParseQueryString(string.Empty);
         parameters["id"] = id.ToString();
-        parameters["bypass_cache"] = skipCache.ToString();
+        parameters["bypass_cache"] = skipCache.ToString().ToLowerInvariant();
         parameters["limit"] = limit.ToString();
 
         var currentDownload = await _requests.GetRequestAsync<Response<UsenetInfoResult?>>($"usenet/mylist?{parameters}", true, cancellationToken);
@@ -278,7 +278,7 @@ public class UsenetApi : IUsenetApi
 
         content.Add(fileContent, "file");
         content.Add(new StringContent(post_processing.ToString()), "post_processing");
-        content.Add(new StringContent(as_queued.ToString()), "as_queued");
+        content.Add(new StringContent(as_queued.ToString().ToLowerInvariant()), "as_queued");
         if (name != null)
         {
             content.Add(new StringContent(name), "name");
@@ -298,7 +298,7 @@ public class UsenetApi : IUsenetApi
         {
             new KeyValuePair<string, string?>("link", link),
             new KeyValuePair<string, string?>("post_processing", post_processing.ToString()),
-            new KeyValuePair<string, string?>("as_queued", as_queued.ToString()),
+            new KeyValuePair<string, string?>("as_queued", as_queued.ToString().ToLowerInvariant()),
             //new KeyValuePair<string, string?>("name", name),
             new KeyValuePair<string, string?>("password", password),
         };
@@ -325,7 +325,7 @@ public class UsenetApi : IUsenetApi
     /// <inheritdoc />
     public async Task<Response<List<AvailableUsenet?>>> GetAvailabilityAsync(string hash, bool listFiles = false, CancellationToken cancellationToken = default)
     {
-        return await _requests.GetRequestAsync<Response<List<AvailableUsenet?>>>($"usenet/checkcached?hash={hash}&format=list&list_files={listFiles}", true, cancellationToken);
+        return await _requests.GetRequestAsync<Response<List<AvailableUsenet?>>>($"usenet/checkcached?hash={hash}&format=list&list_files={listFiles.ToString().ToLowerInvariant()}", true, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -341,9 +341,9 @@ public class UsenetApi : IUsenetApi
         parameters["token"] = _store.BearerToken;
         parameters["usenet_id"] = usenet_id.ToString();
         parameters["file_id"] = file_id?.ToString() ?? "0";
-        parameters["zip_link"] = zip.ToString();
-        parameters["redirect"] = redirect.ToString();
-        parameters["append_name"] = append_name.ToString();
+        parameters["zip_link"] = zip.ToString().ToLowerInvariant();
+        parameters["redirect"] = redirect.ToString().ToLowerInvariant();
+        parameters["append_name"] = append_name.ToString().ToLowerInvariant();
 
         if (!String.IsNullOrWhiteSpace(user_ip))
         {

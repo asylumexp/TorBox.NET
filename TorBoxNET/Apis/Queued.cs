@@ -46,7 +46,7 @@ public class QueuedApi : IQueuedApi
     {
         var parameters = HttpUtility.ParseQueryString(string.Empty);
         parameters["type"] = type;
-        parameters["bypass_cache"] = skipCache.ToString();
+        parameters["bypass_cache"] = skipCache.ToString().ToLowerInvariant();
         if (id.HasValue)
         {
             parameters["id"] = id.Value.ToString();

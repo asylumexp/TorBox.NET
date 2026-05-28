@@ -47,7 +47,7 @@ public class WebDownloadsApi : IWebDownloadsApi
     public async Task<List<WebDownloadInfoResult>?> GetCurrentAsync(bool skipCache = false, int offset = 0, int limit = 1000, CancellationToken cancellationToken = default)
     {
         var parameters = HttpUtility.ParseQueryString(string.Empty);
-        parameters["bypass_cache"] = skipCache.ToString();
+        parameters["bypass_cache"] = skipCache.ToString().ToLowerInvariant();
         parameters["offset"] = offset.ToString();
         parameters["limit"] = limit.ToString();
 
@@ -77,7 +77,7 @@ public class WebDownloadsApi : IWebDownloadsApi
     {
         var parameters = HttpUtility.ParseQueryString(string.Empty);
         parameters["id"] = id.ToString();
-        parameters["bypass_cache"] = skipCache.ToString();
+        parameters["bypass_cache"] = skipCache.ToString().ToLowerInvariant();
         parameters["limit"] = limit.ToString();
 
         var webDownload = await _requests.GetRequestAsync<Response<WebDownloadInfoResult?>>($"webdl/mylist?{parameters}", true, cancellationToken);
@@ -114,8 +114,8 @@ public class WebDownloadsApi : IWebDownloadsApi
             new KeyValuePair<string, string?>("link", link),
             new KeyValuePair<string, string?>("password", password),
             new KeyValuePair<string, string?>("name", name),
-            new KeyValuePair<string, string?>("as_queued", as_queued.ToString()),
-            new KeyValuePair<string, string?>("add_only_if_cached", add_only_if_cached.ToString())
+            new KeyValuePair<string, string?>("as_queued", as_queued.ToString().ToLowerInvariant()),
+            new KeyValuePair<string, string?>("add_only_if_cached", add_only_if_cached.ToString().ToLowerInvariant())
         };
 
         var endpoint = async_create ? "webdl/asynccreatewebdownload" : "webdl/createwebdownload";
@@ -144,7 +144,7 @@ public class WebDownloadsApi : IWebDownloadsApi
 
     public async Task<Response<List<AvailableWebDownload?>>> GetAvailabilityAsync(string hash, bool listFiles = false, CancellationToken cancellationToken = default)
     {
-        return await _requests.GetRequestAsync<Response<List<AvailableWebDownload?>>>($"webdl/checkcached?hash={hash}&format=list&list_files={listFiles}", true, cancellationToken);
+        return await _requests.GetRequestAsync<Response<List<AvailableWebDownload?>>>($"webdl/checkcached?hash={hash}&format=list&list_files={listFiles.ToString().ToLowerInvariant()}", true, cancellationToken);
     }
 
     public async Task<Response<string>> RequestDownloadAsync(int web_id, int? file_id = 0, bool zip = false, string? user_ip = null, bool redirect = false, bool append_name = false, CancellationToken cancellationToken = default)
@@ -153,9 +153,9 @@ public class WebDownloadsApi : IWebDownloadsApi
         parameters["token"] = _store.BearerToken;
         parameters["web_id"] = web_id.ToString();
         parameters["file_id"] = file_id.ToString();
-        parameters["zip_link"] = zip.ToString();
-        parameters["redirect"] = redirect.ToString();
-        parameters["append_name"] = append_name.ToString();
+        parameters["zip_link"] = zip.ToString().ToLowerInvariant();
+        parameters["redirect"] = redirect.ToString().ToLowerInvariant();
+        parameters["append_name"] = append_name.ToString().ToLowerInvariant();
         if (!string.IsNullOrWhiteSpace(user_ip))
         {
             parameters["user_ip"] = user_ip;

@@ -152,6 +152,11 @@ public interface ITorrentsApi
     Task<Response> ControlAsync(string hash, string action, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Modifies the state of a torrent by TorBox torrent ID.
+    /// </summary>
+    Task<Response> ControlByIdAsync(int torrentId, string action, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Retrieves the availability of a torrent (whether it's cached and ready to download).
     /// </summary>
     /// <param name="hash">The unique hash identifier of the torrent.</param>
@@ -217,7 +222,7 @@ public class TorrentsApi : ITorrentsApi
     public async Task<List<TorrentInfoResult>?> GetCurrentAsync(bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default)
     {
         var parameters = HttpUtility.ParseQueryString(string.Empty);
-        parameters["bypass_cache"] = skipCache.ToString();
+        parameters["bypass_cache"] = skipCache.ToString().ToLowerInvariant();
         parameters["limit"] = limit.ToString();
 
         var list = await _requests.GetRequestAsync($"torrents/mylist?{parameters}", true, cancellationToken);
@@ -227,7 +232,8 @@ public class TorrentsApi : ITorrentsApi
             return null;
         }
 
-        return JsonConvert.DeserializeObject<Response<List<TorrentInfoResult>>>(list)?.Data;
+        var response = JsonConvert.DeserializeObject<Response<List<TorrentInfoResult>>>(list);
+        return response?.Data;
     }
 
     /// <inheritdoc />
@@ -276,14 +282,16 @@ public class TorrentsApi : ITorrentsApi
     {
         var parameters = HttpUtility.ParseQueryString(string.Empty);
         parameters["id"] = id.ToString();
-        parameters["bypass_cache"] = skipCache.ToString();
+        parameters["bypass_cache"] = skipCache.ToString().ToLowerInvariant();
         parameters["limit"] = limit.ToString();
 
         var currentTorrent = await _requests.GetRequestAsync($"torrents/mylist?{parameters}", true, cancellationToken);
 
         if (currentTorrent != null)
         {
-            var torrent = JsonConvert.DeserializeObject<Response<TorrentInfoResult?>>(currentTorrent)?.Data;
+            var response = JsonConvert.DeserializeObject<Response<TorrentInfoResult?>>(currentTorrent);
+            var torrent = response?.Data;
+
             if (torrent != null)
             {
                 return torrent;
@@ -348,9 +356,9 @@ public class TorrentsApi : ITorrentsApi
 
             content.Add(fileContent, "file", "torrent.torrent");
             content.Add(new StringContent(seeding.ToString()), "seed");
-            content.Add(new StringContent(allowZip.ToString()), "allow_zip");
-            content.Add(new StringContent(as_queued.ToString()), "as_queued");
-            content.Add(new StringContent(add_only_if_cached.ToString()), "add_only_if_cached");
+            content.Add(new StringContent(allowZip.ToString().ToLowerInvariant()), "allow_zip");
+            content.Add(new StringContent(as_queued.ToString().ToLowerInvariant()), "as_queued");
+            content.Add(new StringContent(add_only_if_cached.ToString().ToLowerInvariant()), "add_only_if_cached");
 
             if (name != null)
             {
@@ -376,9 +384,9 @@ public class TorrentsApi : ITorrentsApi
 
         content.Add(new StringContent(magnet), "magnet");
         content.Add(new StringContent(seeding.ToString()), "seed");
-        content.Add(new StringContent(allowZip.ToString()), "allow_zip");
-        content.Add(new StringContent(as_queued.ToString()), "as_queued");
-        content.Add(new StringContent(add_only_if_cached.ToString()), "add_only_if_cached");
+        content.Add(new StringContent(allowZip.ToString().ToLowerInvariant()), "allow_zip");
+        content.Add(new StringContent(as_queued.ToString().ToLowerInvariant()), "as_queued");
+        content.Add(new StringContent(add_only_if_cached.ToString().ToLowerInvariant()), "add_only_if_cached");
 
         if (name != null)
         {
@@ -417,12 +425,35 @@ public class TorrentsApi : ITorrentsApi
     }
 
     /// <inheritdoc />
+    public async Task<Response> ControlByIdAsync(int torrentId, string action, CancellationToken cancellationToken = default)
+    {
+        var info = await GetIdInfoAsync(torrentId, skipCache: true, cancellationToken: cancellationToken);
+        var isQueued = info?.DownloadState == "queued";
+
+        Object data = isQueued
+            ? new
+            {
+                queued_id = (Int32?)torrentId,
+                operation = action
+            }
+            : new
+            {
+                torrent_id = (Int32?)torrentId,
+                operation = action
+            };
+
+        var jsonContent = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
+        string endpoint = isQueued ? "torrents/controlqueued" : "torrents/controltorrent";
+        return await _requests.PostRequestRawAsync<Response>(endpoint, jsonContent, true, cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task<Response<List<AvailableTorrent?>>> GetAvailabilityAsync(string hash, bool listFiles = false, CancellationToken cancellationToken = default)
     {
         var parameters = HttpUtility.ParseQueryString(string.Empty);
         parameters["hash"] = hash;
         parameters["format"] = "list";
-        parameters["list_files"] = listFiles.ToString();
+        parameters["list_files"] = listFiles.ToString().ToLowerInvariant();
 
         return await _requests.GetRequestAsync<Response<List<AvailableTorrent?>>>($"torrents/checkcached?{parameters}", true, cancellationToken);
     }
@@ -440,9 +471,9 @@ public class TorrentsApi : ITorrentsApi
         parameters["token"] = _store.BearerToken;
         parameters["torrent_id"] = torrent_id.ToString();
         parameters["file_id"] = file_id?.ToString() ?? "0";
-        parameters["zip_link"] = zip.ToString();
-        parameters["redirect"] = redirect.ToString();
-        parameters["append_name"] = append_name.ToString();
+        parameters["zip_link"] = zip.ToString().ToLowerInvariant();
+        parameters["redirect"] = redirect.ToString().ToLowerInvariant();
+        parameters["append_name"] = append_name.ToString().ToLowerInvariant();
 
         if (!String.IsNullOrWhiteSpace(user_ip))
         {

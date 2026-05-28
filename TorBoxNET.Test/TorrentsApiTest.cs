@@ -68,13 +68,13 @@ public class TorrentsApiTest
 
             if (requestIndex == 1)
             {
-                Assert.Equal("https://api.torbox.app/v1/api/torrents/mylist?bypass_cache=True&limit=1000", request.RequestUri!.ToString());
+                Assert.Equal("https://api.torbox.app/v1/api/torrents/mylist?bypass_cache=true&limit=1000", request.RequestUri!.ToString());
                 return JsonResponse("""{"success":true,"data":[]}""");
             }
 
             if (requestIndex == 2)
             {
-                Assert.Equal("https://api.torbox.app/v1/api/queued/getqueued?type=torrent&bypass_cache=True&offset=0&limit=1000", request.RequestUri!.ToString());
+                Assert.Equal("https://api.torbox.app/v1/api/queued/getqueued?type=torrent&bypass_cache=true&offset=0&limit=1000", request.RequestUri!.ToString());
                 return JsonResponse("""{"success":true,"data":[{"id":99,"hash":"abc","name":"queued","magnet":"magnet:?xt=urn:btih:abc","created_at":"2026-03-08T03:45:15Z","torrent_file":false}]}""");
             }
 
@@ -104,10 +104,10 @@ public class TorrentsApiTest
             Assert.Equal("token-123", query["token"]);
             Assert.Equal("42", query["torrent_id"]);
             Assert.Equal("9", query["file_id"]);
-            Assert.Equal("True", query["zip_link"]);
+            Assert.Equal("true", query["zip_link"]);
             Assert.Equal("1.2.3.4", query["user_ip"]);
-            Assert.Equal("True", query["redirect"]);
-            Assert.Equal("True", query["append_name"]);
+            Assert.Equal("true", query["redirect"]);
+            Assert.Equal("true", query["append_name"]);
             return JsonResponse("""{"success":true,"data":"https://cdn.torbox.app/file"}""");
         });
 

@@ -27,8 +27,8 @@ public class WebDownloadsApiTest
             Assert.Contains("link=https%3A%2F%2Ffuckingfast.co%2Fo4hij09fmd3g", body);
             Assert.Contains("password=secret", body);
             Assert.Contains("name=o4hij09fmd3g", body);
-            Assert.Contains("as_queued=True", body);
-            Assert.Contains("add_only_if_cached=True", body);
+            Assert.Contains("as_queued=true", body);
+            Assert.Contains("add_only_if_cached=true", body);
 
             return JsonResponse("""{"success":true,"error":null,"detail":"started","data":{"hash":"abc","webdownload_id":42,"auth_id":"auth","jdownloader_id":null,"link_list":["https://fuckingfast.co/o4hij09fmd3g"]}}""");
         });
@@ -67,7 +67,7 @@ public class WebDownloadsApiTest
         using var harness = new HttpHarness(request =>
         {
             Assert.Equal(HttpMethod.Get, request.Method);
-            Assert.Equal("https://api.torbox.app/v1/api/webdl/mylist?bypass_cache=True&offset=5&limit=10", request.RequestUri!.ToString());
+            Assert.Equal("https://api.torbox.app/v1/api/webdl/mylist?bypass_cache=true&offset=5&limit=10", request.RequestUri!.ToString());
             return JsonResponse("""{"success":true,"data":[{"id":42,"created_at":"2026-03-08T03:45:15Z","updated_at":"2026-03-08T03:45:16Z","auth_id":"auth","name":"o4hij09fmd3g","hash":"abc","download_state":"completed","download_speed":0,"original_url":"https://fuckingfast.co/o4hij09fmd3g","eta":0,"progress":100,"size":123,"download_id":"dl","files":[{"id":9,"name":"o4hij09fmd3g","size":123,"zipped":false,"infected":false}],"active":false,"cached":true,"download_present":true,"download_finished":true,"expires_at":"2026-03-09T03:45:15Z","error":null,"cached_at":"2026-03-08T04:00:00Z","server":1,"alternative_hashes":["def"],"tags":["tag"]}]}""");
         });
 
@@ -86,7 +86,7 @@ public class WebDownloadsApiTest
     {
         using var harness = new HttpHarness(request =>
         {
-            Assert.Equal("https://api.torbox.app/v1/api/webdl/mylist?id=42&bypass_cache=True&limit=1000", request.RequestUri!.ToString());
+            Assert.Equal("https://api.torbox.app/v1/api/webdl/mylist?id=42&bypass_cache=true&limit=1000", request.RequestUri!.ToString());
             return JsonResponse("""{"success":true,"data":{"id":42,"hash":"abc","name":"o4hij09fmd3g"}}""");
         });
 
@@ -103,7 +103,7 @@ public class WebDownloadsApiTest
     {
         using var harness = new HttpHarness(request =>
         {
-            Assert.Equal("https://api.torbox.app/v1/api/webdl/mylist?id=42&bypass_cache=True&limit=10000", request.RequestUri!.ToString());
+            Assert.Equal("https://api.torbox.app/v1/api/webdl/mylist?id=42&bypass_cache=true&limit=10000", request.RequestUri!.ToString());
             return JsonResponse("""{"success":true,"data":{"id":42,"hash":"abc","name":"o4hij09fmd3g"}}""");
         });
 
@@ -145,10 +145,10 @@ public class WebDownloadsApiTest
             Assert.Equal("token-123", query["token"]);
             Assert.Equal("42", query["web_id"]);
             Assert.Equal("9", query["file_id"]);
-            Assert.Equal("True", query["zip_link"]);
+            Assert.Equal("true", query["zip_link"]);
             Assert.Equal("1.2.3.4", query["user_ip"]);
-            Assert.Equal("True", query["redirect"]);
-            Assert.Equal("True", query["append_name"]);
+            Assert.Equal("true", query["redirect"]);
+            Assert.Equal("true", query["append_name"]);
             return JsonResponse("""{"success":true,"data":"https://cdn.torbox.app/o4hij09fmd3g"}""");
         });
 
@@ -165,7 +165,7 @@ public class WebDownloadsApiTest
     {
         using var harness = new HttpHarness(request =>
         {
-            Assert.Equal("https://api.torbox.app/v1/api/webdl/checkcached?hash=abc&format=list&list_files=True", request.RequestUri!.ToString());
+            Assert.Equal("https://api.torbox.app/v1/api/webdl/checkcached?hash=abc&format=list&list_files=true", request.RequestUri!.ToString());
             return JsonResponse("""{"success":true,"data":[{"name":"o4hij09fmd3g","size":123,"hash":"abc","files":[{"name":"o4hij09fmd3g","size":123}]}]}""");
         });
 
