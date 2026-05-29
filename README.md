@@ -46,6 +46,14 @@ You can find your TorBox API key in your TorBox account settings.
 
 ## Torrents
 
+### Deprecation notices
+
+`GetHashInfoAsync` is deprecated. On or after 31 August 2026, it will be removed. Migrate to `GetIdInfoAsync` and use torrent ID instead of torrent hash.
+
+`ControlAsync` currently accepts a torrent hash. On or after 31 August 2026, it will require a `torrentId` instead. Migrate to `ControlByIdAsync`.
+
+On or after 31 August 2026, `ControlByIdAsync` is expected to become an alias for `ControlAsync` after `ControlAsync` changes to require a `torrentId`.
+
 Add a magnet link:
 
 ```csharp

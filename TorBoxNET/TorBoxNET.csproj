@@ -12,9 +12,9 @@
     <RepositoryUrl>https://github.com/asylumexp/TorBox.NET</RepositoryUrl>
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>TorBox</PackageTags>
-    <Version>2.1.0</Version>
-    <AssemblyVersion>2.1.0.0</AssemblyVersion>
-    <FileVersion>2.1.0.0</FileVersion>
+    <Version>2.1.1</Version>
+    <AssemblyVersion>2.1.1.0</AssemblyVersion>
+    <FileVersion>2.1.1.0</FileVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>

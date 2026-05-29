@@ -90,6 +90,11 @@ public interface ITorrentsApi
     /// <returns>
     /// Information about the torrent if found, otherwise null.
     /// </returns>
+    /// <remarks>
+    /// Deprecated: On or after 31 August 2026, GetHashInfoAsync will be removed.
+    /// Migrate to GetIdInfoAsync and use torrent ID instead of torrent hash.
+    /// </remarks>
+    [Obsolete("Torrents.GetHashInfoAsync will be removed on or after 31 August 2026. Migrate to Torrents.GetIdInfoAsync and use torrent ID instead of torrent hash.")]
     Task<TorrentInfoResult?> GetHashInfoAsync(string hash, bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -149,11 +154,21 @@ public interface ITorrentsApi
     /// <returns>
     /// The response after performing the action.
     /// </returns>
+    /// <remarks>
+    /// Deprecated: On or after 31 August 2026, ControlAsync will require a torrentId
+    /// instead of a hash. Migrate to ControlByIdAsync.
+    /// </remarks>
+    [Obsolete("Torrents.ControlAsync currently accepts a torrent hash, but on or after 31 August 2026 it will require a torrentId instead. Migrate to Torrents.ControlByIdAsync.")]
     Task<Response> ControlAsync(string hash, string action, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Modifies the state of a torrent by TorBox torrent ID.
     /// </summary>
+    /// <remarks>
+    /// On or after 31 August 2026, ControlByIdAsync is expected to become an alias for
+    /// ControlAsync after ControlAsync changes to require a torrentId instead of a hash.
+
+    /// </remarks>
     Task<Response> ControlByIdAsync(int torrentId, string action, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -309,7 +324,15 @@ public class TorrentsApi : ITorrentsApi
     }
 
     /// <inheritdoc />
+    [Obsolete("Torrents.GetHashInfoAsync will be removed on or after 31 August 2026. Migrate to Torrents.GetIdInfoAsync and use torrent ID instead of torrent hash.")]
     public async Task<TorrentInfoResult?> GetHashInfoAsync(string hash, bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default)
+    {
+        Console.WriteLine("Deprecation notice: Torrents.GetHashInfoAsync will be removed on or after 31 August 2026. Migrate to Torrents.GetIdInfoAsync and use torrent ID instead of torrent hash.");
+
+        return await GetHashInfoCoreAsync(hash, skipCache, limit, cancellationToken);
+    }
+
+    private async Task<TorrentInfoResult?> GetHashInfoCoreAsync(string hash, bool skipCache = false, int limit = 1000, CancellationToken cancellationToken = default)
     {
         var currentTorrents = await GetCurrentAsync(skipCache, limit, cancellationToken);
 
@@ -399,9 +422,12 @@ public class TorrentsApi : ITorrentsApi
     }
 
     /// <inheritdoc />
+    [Obsolete("Torrents.ControlAsync currently accepts a torrent hash, but on or after 31 August 2026 it will require a torrentId instead. Migrate to Torrents.ControlByIdAsync.")]
     public async Task<Response> ControlAsync(string hash, string action, CancellationToken cancellationToken = default)
     {
-        var info = await GetHashInfoAsync(hash, skipCache: true, cancellationToken: cancellationToken);
+        Console.WriteLine("Deprecation notice: Torrents.ControlAsync currently accepts a torrent hash, but on or after 31 August 2026 it will require a torrentId instead. Migrate to Torrents.ControlByIdAsync.");
+
+        var info = await GetHashInfoCoreAsync(hash, skipCache: true, cancellationToken: cancellationToken);
         if (info == null)
         {
             throw new TorBoxException("ITEM_NOT_FOUND", $"Torrent with hash {hash} was not found.");
